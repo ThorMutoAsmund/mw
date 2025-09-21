@@ -1,0 +1,25 @@
+﻿
+// Set bpm
+set({bpm: 120})
+
+// Load sample
+$a: s("abcde.wav")
+
+// Load sample and cut out a 1 beat length starting from beat 2
+$a: s("abcde.wav").cut({start: -2, len: -1})
+
+$b: $a/cut $a, -1, -2
+
+$t1: track("drums")
+$t2: track("base")
+
+add $t1, $a @2
+add $t1, $b @3
+
+add $OUT $t1, $t2
+
+$OUT
+
+
+
+
