@@ -2,6 +2,9 @@
 // Set bpm
 set({bpm: 120})
 
+bpm(220)
+
+
 // Load sample
 $a: s("abcde.wav")
 

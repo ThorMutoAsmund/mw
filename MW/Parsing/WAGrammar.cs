@@ -1,5 +1,6 @@
 ﻿using Irony.Interpreter;
 using Irony.Parsing;
+using System.Diagnostics;
 
 namespace MW.Parsing
 {
@@ -22,38 +23,43 @@ namespace MW.Parsing
         {
             // Terminals
             var number = new NumberLiteral<NumberNode>("number", NumberOptions.AllowLetterAfter);
-            var ident = new IdentifierTerminal<IdentNode>("ident");
+            var varId = new IdentifierTerminal<VarIdentNode>("varId");
+            var funcId = new IdentifierTerminal<FuncIdentNode>("funcId");
+            var namedArgId = new IdentifierTerminal<NamedArgIdentNode>("namedArgId");
 
             // Non-terminals
             var lines = new NonTerminal<LinesNode>("Lines");
-            var line = new NonTerminal<LineNode>("Line");
+            var line = new TransientNonTerminal("Line");
             var assignment = new NonTerminal<AssignmentNode>("Assign");
-            var variable = new TransientNonTerminal("Var");
             var expr = new NonTerminal<ExprNode>("Expr");
-            var exprPart = new NonTerminal<ExprPartNode>("ExprPart");
-            var args = new NonTerminal<ArgsNode>("Args");
+            var compositeFunction = new NonTerminal<CompositeFunctionNode>("CompositeFunction");
+            var func = new NonTerminal<FuncNode>("Func");
             var arg = new TransientNonTerminal("Arg");
-            var namedArgs = new NonTerminal<NamedArgsNode>("NamedArgs");
+            var args = new NonTerminal<ArgsNode>("Args");
             var namedArg = new NonTerminal<NamedArgNode>("NamedArg");
+            var namedArgs = new NonTerminal<NamedArgsNode>("NamedArgs");
             var beat = new NonTerminal<BeatNode>("Beat");
-
+            var variable = new NonTerminal<VariableNode>("Variable");
 
             // EBNF-ish rules
-            beat.Rule = number | beat + BeatSuffix;
-            lines.Rule = line + lines | line;
+            variable.Rule = VariablePrefix + varId;
+            beat.Rule = number + BeatSuffix;
             line.Rule = assignment | expr;
-            assignment.Rule = variable + AssignmentOperator + expr;
-            variable.Rule = VariablePrefix + ident;
-            expr.Rule = exprPart + ExtendOperator + exprPart | exprPart;
-            exprPart.Rule = ident + StartArgs + args + EndArgs;
-            args.Rule = arg + ArgSeparator + args | arg;
-            arg.Rule = beat | variable | StartObject + namedArgs + EndObject | StartList + args + EndList;
-            namedArgs.Rule = namedArg + ArgSeparator + namedArgs | namedArg;
-            namedArg.Rule = ident + NamedArgSuffix + arg;
+            assignment.Rule = variable + AssignmentOperator + arg;
+            expr.Rule = arg | compositeFunction;
+            func.Rule = funcId + StartArgs + args + EndArgs;
+            arg.Rule = beat | number | variable | StartObject + namedArgs + EndObject | StartList + args + EndList;
+            namedArg.Rule = namedArgId + NamedArgSuffix + arg;
+
+            MakePlusRule(lines, line);
+            MakePlusRule(args, ToTerm(ArgSeparator), arg);
+            MakePlusRule(namedArgs, ToTerm(ArgSeparator), namedArg);
+            MakePlusRule(compositeFunction, ToTerm(ExtendOperator), func);
 
             // Punctuation and precedence
-            MarkPunctuation(StartObject, EndObject, StartArgs, EndArgs, ArgSeparator, VariablePrefix, AssignmentOperator, 
-                ExtendOperator, StartList, EndList);
+            MarkPunctuation(StartObject, EndObject, StartArgs, EndArgs, ArgSeparator, VariablePrefix, 
+                AssignmentOperator, 
+                ExtendOperator, StartList, EndList, BeatSuffix);
             //RegisterOperators(1, AssignmentOperator);
             //RegisterOperators(2, MultiplicationOperator, DivisionOperator);
 
@@ -79,11 +85,8 @@ namespace MW.Parsing
         {
             input = """
                 // Comment before
-                $a: test(2, 3, 4.2, 5b )
-                  .show(3, 4)                
-                fix(4,5) // Comment after
-                fix(3,4) /* block comment */ .extend({start: 2, end: 3, jump: [10,20,30], pattern: {a:2, b:3, c:4}})
-                                
+                $y: 10
+                add(2b,$x,$y)
                 """;
 
             var lang = new LanguageData(new WAGrammar());
@@ -110,9 +113,10 @@ namespace MW.Parsing
 
             // optional: pass variables/context to nodes via Globals
             thread.App.Globals["vars"] = new Dictionary<string, object> { ["x"] = 10.0 };
+            thread.App.Globals["settings"] = new Dictionary<string, object> { };
 
             // Evaluate
-            var result = tree.Root.EvaluateDouble(thread);
+            var result = tree.Root.Evaluate(thread);
             Console.WriteLine(result);
         }
 

@@ -5,7 +5,7 @@ using Irony.Parsing;
 
 namespace MW.Parsing
 {
-    public class ExprNode : AstNode
+    public class CompositeFunctionNode : AstNode
     {
         public AstNode? Value { get; private set; }
         public override void Init(AstContext ctx, ParseTreeNode node)
@@ -19,5 +19,6 @@ namespace MW.Parsing
         {
             return this.Value?.Evaluate(thread) ?? 0;
         }
+
     }
 }

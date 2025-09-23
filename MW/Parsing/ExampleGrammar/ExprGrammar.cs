@@ -1,7 +1,7 @@
 ﻿using Irony.Interpreter;
 using Irony.Parsing;
 
-namespace MW.Parsing
+namespace MW.Parsing.ExampleGrammar
 {
     public sealed class ExprGrammar : Grammar
     {
@@ -17,7 +17,7 @@ namespace MW.Parsing
         {
             // Terminals
             var number = new NumberLiteral<NumberNode>("number");
-            var ident = new IdentifierTerminal<IdentNode>("ident");
+            var ident = new IdentifierTerminal<VarIdentNode>("ident");
 
             // Non-terminals
             var expr = new NonTerminal<BinaryExprNode>("Expr");
@@ -34,8 +34,8 @@ namespace MW.Parsing
             RegisterOperators(1, PlusOperator, MinusOperator);
             RegisterOperators(2, MultiplicationOperator, DivisionOperator);
 
-            this.Root = expr;
-            this.LanguageFlags = LanguageFlags.CreateAst;
+            Root = expr;
+            LanguageFlags = LanguageFlags.CreateAst;
         }
 
         public static void Test(string input = "1 + 2 * (x - 3)")

@@ -5,21 +5,14 @@ using Irony.Parsing;
 
 namespace MW.Parsing
 {
-    public class VariableNode : AstNode
+    public class VarIdentNode : AstNode
     {
         public string Name { get; private set; } = string.Empty;
         public override void Init(AstContext ctx, ParseTreeNode node)
         {
             base.Init(ctx, node);
 
-            this.Name = node.ChildNodes[0].Token.Text;
-        }
-
-        protected override object DoEvaluate(ScriptThread thread)
-        {
-            var vars = (IDictionary<string, object>)thread.App.Globals["vars"];
-            
-            return vars.ContainsKey(this.Name) ? vars[this.Name] : 0;
+            this.Name = node.Token.Text;
         }
 
         public override string ToString() => this.Name;

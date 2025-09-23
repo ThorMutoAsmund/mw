@@ -1,4 +1,5 @@
 ﻿using Irony.Interpreter.Ast;
+using Irony.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,10 +46,17 @@ namespace MW.Parsing
     {
         public TransientNonTerminal(string name) : base(name)
         {
-            AstConfig.NodeCreator = (ctx, n) =>
-                n.AstNode = n.ChildNodes.Count == 1 ? n.ChildNodes[0].AstNode :
-                n.ChildNodes[1].AstNode;
+            //this.Grammar.MarkTransient(this);
+            //AstConfig.NodeCreator = (ctx, n) =>
+            //    n.AstNode = n.ChildNodes.Count == 1 ? n.ChildNodes[0].AstNode :
+            //    n.ChildNodes[1].AstNode;
 
+        }
+
+        public override void Init(GrammarData grammarData)
+        {
+            base.Init(grammarData);
+            grammarData.Grammar.MarkTransient(this);
         }
     }
 }
