@@ -2,22 +2,24 @@
 using Irony.Interpreter;
 using Irony.Interpreter.Ast;
 using Irony.Parsing;
+using System.Globalization;
 
 namespace MW.Parsing
 {
-    public class ExprNode : AstNode
+    public class TimeNode : TypedAstNode
     {
-        public AstNode? Value { get; private set; }
+        public AstNode? Child { get; private set; }
         public override void Init(AstContext ctx, ParseTreeNode node)
         {
             base.Init(ctx, node);
 
-            this.Value = AddChild(role: "child", node.ChildNodes[0]);
+            this.Child = AddChild("value", node.ChildNodes[0]);
+            this.Type = AstType.Time;
         }
 
         protected override object DoEvaluate(ScriptThread thread)
         {
-            return this.Value?.Evaluate(thread) ?? 0;
+            return this.Child!.EvaluateDouble(thread);
         }
     }
 }

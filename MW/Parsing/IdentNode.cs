@@ -5,7 +5,7 @@ using Irony.Parsing;
 
 namespace MW.Parsing
 {
-    public class FuncIdentNode : AstNode
+    public class IdentNode : AstNode
     {
         public string Name { get; private set; } = string.Empty;
         public override void Init(AstContext ctx, ParseTreeNode node)

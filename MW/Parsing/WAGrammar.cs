@@ -1,4 +1,5 @@
 ﻿using Irony.Interpreter;
+using Irony.Interpreter.Ast;
 using Irony.Parsing;
 using System.Diagnostics;
 
@@ -19,47 +20,57 @@ namespace MW.Parsing
         public const string EndArgs = ")";
         public const string NamedArgSuffix = ":";
         public const string BeatSuffix = "b";
+        public const string SecondsSuffix = "s";
+        public const string TimePrefix = "@";
+
         public WAGrammar()
         {
             // Terminals
-            var number = new NumberLiteral<NumberNode>("number", NumberOptions.AllowLetterAfter);
-            var varId = new IdentifierTerminal<VarIdentNode>("varId");
-            var funcId = new IdentifierTerminal<FuncIdentNode>("funcId");
-            var namedArgId = new IdentifierTerminal<NamedArgIdentNode>("namedArgId");
+            var numberTerm = new NumberLiteral<NumberNode>("number", NumberOptions.AllowLetterAfter);
+            var varIdentTerm = new IdentifierTerminal<IdentNode>("variableName");
+            var funcIdentTerm = new IdentifierTerminal<IdentNode>("name");
+            var namedArgIdentTerm = new IdentifierTerminal<IdentNode>("namedArgIdent");
+            var stringTerm = new StringLiteral<StringNode>("string", "\"", StringOptions.None);
 
             // Non-terminals
             var lines = new NonTerminal<LinesNode>("Lines");
             var line = new TransientNonTerminal("Line");
             var assignment = new NonTerminal<AssignmentNode>("Assign");
-            var expr = new NonTerminal<ExprNode>("Expr");
             var compositeFunction = new NonTerminal<CompositeFunctionNode>("CompositeFunction");
             var func = new NonTerminal<FuncNode>("Func");
-            var arg = new TransientNonTerminal("Arg");
-            var args = new NonTerminal<ArgsNode>("Args");
+            var obj = new NonTerminal<ObjectNode>("Object");
+            var expr = new TransientNonTerminal("Expr");
+            var args = new NonTerminal<AstNode>("Args");
             var namedArg = new NonTerminal<NamedArgNode>("NamedArg");
-            var namedArgs = new NonTerminal<NamedArgsNode>("NamedArgs");
+            var namedArgs = new NonTerminal<AstNode>("NamedArgs");
             var beat = new NonTerminal<BeatNode>("Beat");
+            var seconds = new NonTerminal<SecondsNode>("Seconds");
+            var time = new NonTerminal<TimeNode>("Time");
             var variable = new NonTerminal<VariableNode>("Variable");
 
             // EBNF-ish rules
-            variable.Rule = VariablePrefix + varId;
-            beat.Rule = number + BeatSuffix;
+            variable.Rule = VariablePrefix + varIdentTerm;
+            beat.Rule = numberTerm + BeatSuffix;
+            seconds.Rule = numberTerm + SecondsSuffix;
+            time.Rule = TimePrefix + beat | TimePrefix + seconds;
             line.Rule = assignment | expr;
-            assignment.Rule = variable + AssignmentOperator + arg;
-            expr.Rule = arg | compositeFunction;
-            func.Rule = funcId + StartArgs + args + EndArgs;
-            arg.Rule = beat | number | variable | StartObject + namedArgs + EndObject | StartList + args + EndList;
-            namedArg.Rule = namedArgId + NamedArgSuffix + arg;
+            assignment.Rule = variable + AssignmentOperator + expr;
+            func.Rule = funcIdentTerm + StartArgs + args + EndArgs;
+            obj.Rule = StartObject + namedArgs + EndObject;
+            expr.Rule = compositeFunction | beat | seconds | time | numberTerm | stringTerm | variable | obj | StartList + args + EndList;
+            namedArg.Rule = namedArgIdentTerm + NamedArgSuffix + expr;
+
+            stringTerm.AddStartEnd("'", StringOptions.None);
 
             MakePlusRule(lines, line);
-            MakePlusRule(args, ToTerm(ArgSeparator), arg);
+            MakePlusRule(args, ToTerm(ArgSeparator), expr);
             MakePlusRule(namedArgs, ToTerm(ArgSeparator), namedArg);
             MakePlusRule(compositeFunction, ToTerm(ExtendOperator), func);
-
+            
             // Punctuation and precedence
             MarkPunctuation(StartObject, EndObject, StartArgs, EndArgs, ArgSeparator, VariablePrefix, 
                 AssignmentOperator, 
-                ExtendOperator, StartList, EndList, BeatSuffix);
+                ExtendOperator, StartList, EndList, BeatSuffix, SecondsSuffix, TimePrefix);
             //RegisterOperators(1, AssignmentOperator);
             //RegisterOperators(2, MultiplicationOperator, DivisionOperator);
 
@@ -85,8 +96,7 @@ namespace MW.Parsing
         {
             input = """
                 // Comment before
-                $y: 10
-                add(2b,$x,$y)
+                show(10,10b,10s,@10s,@10b,{a:1,b:2},"hello daw")
                 """;
 
             var lang = new LanguageData(new WAGrammar());

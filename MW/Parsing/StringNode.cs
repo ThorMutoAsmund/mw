@@ -6,19 +6,20 @@ using System.Globalization;
 
 namespace MW.Parsing
 {
-    public class NumberNode : TypedAstNode
+    public class StringNode : TypedAstNode
     {
-        public double Value { get; private set; }
+        public string Value { get; private set; } = string.Empty;
         public override void Init(AstContext ctx, ParseTreeNode node)
         {
             base.Init(ctx, node);
 
-            this.Type = AstType.Number;
-            this.Value = Convert.ToDouble(node.Token.Value, CultureInfo.InvariantCulture);
+            this.Type = AstType.String;
+            this.Value = Convert.ToString(node.Token.Value) ?? string.Empty;
         }
 
         protected override object DoEvaluate(ScriptThread thread) => this.Value;
 
-        public override string ToString() => this.Value.ToString(CultureInfo.InvariantCulture);
+        public override string ToString() => this.Value;
     }
 }
+

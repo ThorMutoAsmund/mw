@@ -17,7 +17,7 @@ namespace MW.Parsing.ExampleGrammar
         {
             // Terminals
             var number = new NumberLiteral<NumberNode>("number");
-            var ident = new IdentifierTerminal<VarIdentNode>("ident");
+            var ident = new IdentifierTerminal<IdentNode>("ident");
 
             // Non-terminals
             var expr = new NonTerminal<BinaryExprNode>("Expr");

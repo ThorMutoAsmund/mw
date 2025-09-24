@@ -23,6 +23,36 @@ add $OUT $t1, $t2
 
 $OUT
 
+// Pointer storage
+$b = 10
+%a: $b*2
+show(%a) // displays 20
+$b = 20
+show(%a) // displays 40
+
+// Create three tracks
+$t1: track("track 1")
+$t2: track("track 2")
+$t3: track("track 3")
+
+// Add tracks to master bus - all added at time=0
+add($MASTER, [$t1, $t2, $t3])
+
+// Load samples
+$voc1: s("vocal01.wav")
+$voc2: s("vocal02.wav")
+$drm1: s("drump01.wav")
+
+// Add vocal1 at position beat0, add vocal2 at position beat4
+// Leaving out keys for the named args, means the reciever has to infer the name from the type
+// Adding a sample will always make that value get the key 'sample'
+add($t1, [{$voc1, @0b}, {$voc2, @4b}])
+
+
+// should the list evaluate the args?
+
+
+
 
 
 

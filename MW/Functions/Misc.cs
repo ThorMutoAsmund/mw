@@ -14,12 +14,39 @@ namespace MW.Functions
     public static class Misc
     {
         [Function(name: "show", description: "Display the arguments")]
-        public static void Show(ScriptThread thread, List<AstNode> args)
+        public static void Show(ScriptThread thread, List<TypedAstNode> args)
         {
             foreach (var arg in args)
             {
-                var value = arg.Evaluate(thread);
-                Console.WriteLine(value);
+                switch (arg.Type)
+                {
+                    case AstType.Number:
+                    case AstType.Time:
+                    case AstType.Duration:
+                        {
+                            var value = arg.Evaluate(thread);
+                            Console.WriteLine(value);
+                            break;
+                        }
+                    case AstType.String:
+                        {
+                            var value = arg.Evaluate(thread);
+                            Console.WriteLine($"\"{value}\"");
+                            break;
+                        }
+                    case AstType.Object:
+                        {
+                            arg.Evaluate(thread);
+                            Console.WriteLine(arg.ToString());
+                            break;
+                        }
+                    default:
+                        {
+                            arg.Evaluate(thread);
+                            Console.WriteLine(arg.Type);
+                            break;
+                        }
+                }
             }
         }
 

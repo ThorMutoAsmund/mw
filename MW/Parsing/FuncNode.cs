@@ -11,7 +11,7 @@ namespace MW.Parsing
     public class FuncNode : AstNode
     {
         public string MethodName { get; private set; } = string.Empty;
-        public List<AstNode> Args { get; private set; } = new();
+        public List<TypedAstNode?> Args { get; private set; } = new();
         private static List<(MethodInfo MethodInfo, FunctionAttribute Method)>? _methods;
         private static List<(MethodInfo MethodInfo, FunctionAttribute Method)> methods
         {
@@ -34,7 +34,7 @@ namespace MW.Parsing
             int arg = 0;
             foreach (var child in children)
             {
-                this.Args.Add(AddChild(role: $"Arg{arg++}", child));
+                this.Args.Add(AddChild(role: $"Arg{arg++}", child) as TypedAstNode);
             }
         }
 

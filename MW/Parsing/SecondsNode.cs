@@ -6,7 +6,7 @@ using System.Globalization;
 
 namespace MW.Parsing
 {
-    public class BeatNode : TypedAstNode
+    public class SecondsNode : TypedAstNode
     {
         public AstNode? Child { get; private set; }
         public override void Init(AstContext ctx, ParseTreeNode node)
@@ -19,12 +19,7 @@ namespace MW.Parsing
 
         protected override object DoEvaluate(ScriptThread thread)
         {
-            var settings = (IDictionary<string, object>)thread.App.Globals["settings"];
-
-            var bmp = settings.ContainsKey(Constants.BMP) ?
-                Convert.ToDouble(settings[Constants.BMP]) : Constants.BMPDefault;
-
-            return this.Child!.EvaluateDouble(thread) * 60.0 / bmp;
+            return this.Child!.EvaluateDouble(thread);
         }
     }
 }

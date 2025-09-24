@@ -34,6 +34,24 @@ namespace MW.Parsing
         }
     }
 
+    public class StringLiteral<T> : Irony.Parsing.StringLiteral where T : AstNode
+    {
+        public StringLiteral(string name) : base(name)
+        {
+            AstConfig.NodeType = typeof(T);
+        }
+
+        public StringLiteral(string name, string startEndSymbol) : base(name, startEndSymbol)
+        {
+            AstConfig.NodeType = typeof(T);
+        }
+
+        public StringLiteral(string name, string startEndSymbol, StringOptions options) : base(name, startEndSymbol, options)
+        {
+            AstConfig.NodeType = typeof(T);
+        }
+    }
+
     public class NonTerminal<T> : Irony.Parsing.NonTerminal where T : AstNode
     {
         public NonTerminal(string name) : base(name)
