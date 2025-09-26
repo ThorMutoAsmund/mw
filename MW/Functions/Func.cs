@@ -16,7 +16,7 @@ namespace MW.Functions
         {
             if (context.Args.Count != numberOfArgs)
             {
-                throw new ParseException($"{name} requires exactly {numberOfArgs} argument(s)");
+                throw new RunException($"{name} requires exactly {numberOfArgs} argument(s)");
             }
         }
 
@@ -24,7 +24,7 @@ namespace MW.Functions
         {
             if (value < min || value > max)
             {
-                throw new ParseException($"{name} requires the value {value} to be between {min} and {max}");
+                throw new RunException($"{name} requires the value {value} to be between {min} and {max}");
             }
         }
     }

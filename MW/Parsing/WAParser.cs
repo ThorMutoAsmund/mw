@@ -76,7 +76,7 @@ namespace MW.Parsing
             factor.Rule = beat | seconds | time | numberTerm | variable | StartParenthesis + nexpr + EndParenthesis;
 
             expr.Rule = func | nexpr | stringTerm | obj;
-            arg.Rule = argIdentTerm + ArgIdSuffix + expr | expr;
+            arg.Rule = ArgIdSuffix + argIdentTerm + expr | expr;
 
             stringTerm.AddStartEnd("'", StringOptions.None);
 

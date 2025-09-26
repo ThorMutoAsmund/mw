@@ -42,6 +42,11 @@ namespace MW.Functions
                             WAEditor.ShowInfo($"\"{value}\"");
                             break;
                         }
+                    case AstType.RawSample:
+                        {
+                            WAEditor.ShowInfo($"Sample({value})");
+                            break;
+                        }
                     case AstType.Object:
                         {
                             WAEditor.ShowInfo(arg.Value.ToString());

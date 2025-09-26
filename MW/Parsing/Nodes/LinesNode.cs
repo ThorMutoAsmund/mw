@@ -32,7 +32,7 @@ namespace MW.Parsing.Nodes
                     result = line.Evaluate(thread);
                     Type = line.Type;
                 }
-                catch (ParseException ex)
+                catch (RunException ex)
                 {
                     line.Error = ex.Message;
                 }

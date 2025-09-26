@@ -49,8 +49,10 @@ $drm1: s("drump01.wav")
 add($t1, [{$voc1, @0b}, {$voc2, @4b}])
 add($t1, repeat(3, {drm1, @0b}))
 
+PROBLEM
 
-// Types of non-terminals
+show(s("abc.wav"))
+does not work because show thinks s is the id of an argument
 
 
 

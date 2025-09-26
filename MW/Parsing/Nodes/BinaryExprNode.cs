@@ -22,25 +22,12 @@ namespace MW.Parsing.Nodes
                 this.Op = node.ChildNodes[1].FindTokenAndGetText();
                 this.Right = (AddChild("right", node.ChildNodes[2]) as TypedAstNode)!;
 
-                if (this.Left.Type == AstType.Time || this.Right.Type == AstType.Time)
-                {
-                    this.Type = AstType.Time;
-                }
-                else if (this.Left.Type == AstType.Duration || this.Right.Type == AstType.Duration)
-                {
-                    this.Type = AstType.Duration;
-                }
-                else
-                {
-                    this.Type = AstType.Number;
-                }
             }
             else if (node.ChildNodes.Count == 1)
             {
                 // pass-through (Term/Expr collapsed)
                 this.Op = ExprGrammar.PassOperator;
                 this.Left = (AddChild("value", node.ChildNodes[0]) as TypedAstNode)!;
-                this.Type = this.Left.Type;
             }
         }
 
@@ -48,12 +35,27 @@ namespace MW.Parsing.Nodes
         {
             if (this.Op == "pass")
             {
-                return this.Left.Evaluate(thread);
+                var value = this.Left.Evaluate(thread);
+                this.Type = this.Left.Type;
+                return value;
             }
 
-            var l = Convert.ToDouble(this.Left.Evaluate(thread));
-            var r = Convert.ToDouble(this.Right.Evaluate(thread));
-            
+            var l = this.Left.EvaluateDouble(thread);
+            var r = this.Right.EvaluateDouble(thread);
+
+            if (this.Left.Type == AstType.Time || this.Right.Type == AstType.Time)
+            {
+                this.Type = AstType.Time;
+            }
+            else if (this.Left.Type == AstType.Duration || this.Right.Type == AstType.Duration)
+            {
+                this.Type = AstType.Duration;
+            }
+            else
+            {
+                this.Type = AstType.Number;
+            }
+
             return Op switch
             {
                 ExprGrammar.PlusOperator => l + r,

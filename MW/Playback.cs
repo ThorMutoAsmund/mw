@@ -14,7 +14,7 @@ namespace MW
         }
 
         [Command(name: "play", arguments:"[<sample>|Ø]", description: "Play sample or resume current playback")]
-        public static void Play(string sampleName)
+        public static void Play(string srcName)
         {
             if (fileReader == null)
             {
@@ -22,7 +22,7 @@ namespace MW
                 return;
             }
 
-            if (string.IsNullOrEmpty(sampleName))
+            if (string.IsNullOrEmpty(srcName))
             {
                 if (WaveOut.PlaybackState == PlaybackState.Stopped)
                 {
@@ -36,18 +36,9 @@ namespace MW
 
             try
             {
-                var relativePath = Path.Combine(Env.DownloadFolderName, sampleName);
-                var filePath = Path.Combine(Env.ProjectPath, relativePath);
-
-                if (!File.Exists(filePath))
+                if (!SrcExists(srcName, out var message, out var filePath))
                 {
-                    Show.Error($"File not found: {relativePath}");
-                    return;
-                }
-
-                if (!sampleName.EndsWith("wav"))
-                {
-                    Show.Error("Cannot play back non-wav file");
+                    Show.Error(message);
                     return;
                 }
 
@@ -59,6 +50,27 @@ namespace MW
             {
                 Show.Error($"Playback error: {ex.Message}");
             }
+        }
+
+        public static bool SrcExists(string srcName, out string message, out string filePath)
+        {
+            var relativePath = Path.Combine(Env.DownloadFolderName, srcName);
+            filePath = Path.Combine(Env.ProjectPath, relativePath);
+
+            if (!File.Exists(filePath))
+            {
+                message = $"File not found: {relativePath}";
+                return false;
+            }
+
+            if (!srcName.EndsWith("wav"))
+            {
+                message = "Src not a wav file";
+                return false;
+            }
+
+            message = string.Empty;
+            return true;
         }
 
         public static void Reset()
