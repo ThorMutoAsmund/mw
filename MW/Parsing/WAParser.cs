@@ -1,0 +1,219 @@
+﻿using Irony.Interpreter;
+//using Irony.Interpreter.Ast;
+using Irony.Parsing;
+using MW.Parsing.Nodes;
+using System;
+using System.Xml.Linq;
+
+namespace MW.Parsing
+{
+    public sealed class WAParser : Grammar
+    {
+        public const string PassOperator = "pass";
+        public const string VariablePrefix = "$";
+        public const string AssignmentOperator = ":";
+        public const string ArgSeparator = ",";
+        public const string StartObject = "{";
+        public const string EndObject = "}";
+        public const string StartFuncArgs = "(";
+        public const string EndFuncArgs = ")";
+        public const string ArgIdSuffix = ":";
+        public const string BeatSuffix = "b";
+        public const string SecondsSuffix = "s";
+        public const string TimePrefix = "@";
+
+        public static List<string> ParseErrors { get; private set; } = new();
+        public static object? ParseResult { get; private set; } = null; 
+        public static ParseTree? Tree { get; private set; } = null;
+        public static string? Source { get; private set; } = null;
+        public WAParser()
+        {
+            // Terminals
+            NumberLiteral<NumberNode> numberTerm = new("number", NumberOptions.AllowLetterAfter);
+            IdentifierTerminal<IdentNode> varIdentTerm = new("variableName");
+            IdentifierTerminal<IdentNode> funcIdentTerm = new("name");
+            IdentifierTerminal<IdentNode> argIdentTerm = new("id");
+            StringLiteral<TextNode> stringTerm = new("string", "\"", StringOptions.None);
+
+            // Non-terminals
+            NonTerminal<LinesNode> lines = new("Lines");
+            TransientNonTerminal line = new("Line");
+            NonTerminal<AssignmentNode> assignment = new("Assign");
+            NonTerminal<FuncNode> func = new("Func");
+            NonTerminal<ObjectNode> obj = new("Object");
+            TransientNonTerminal expr = new("Expr");
+            NonTerminal<ArgNode> arg = new("Arg");
+            NonTerminal<ArgsNode> args = new("Args");
+            NonTerminal<BeatNode> beat = new("Beat");
+            NonTerminal<SecondsNode> seconds = new("Seconds");
+            NonTerminal<TimeNode> time = new("Time");
+            NonTerminal<VariableNode> variable = new("Variable");
+
+            // EBNF-ish rules
+            variable.Rule = VariablePrefix + varIdentTerm;
+            beat.Rule = numberTerm + BeatSuffix;
+            seconds.Rule = numberTerm + SecondsSuffix;
+            time.Rule = TimePrefix + beat | TimePrefix + seconds;
+            line.Rule = assignment | expr;
+            assignment.Rule = variable + AssignmentOperator + expr;
+            func.Rule = funcIdentTerm + StartFuncArgs + args + EndFuncArgs;
+            obj.Rule = StartObject + args + EndObject;
+            expr.Rule = func | beat | seconds | time | numberTerm | stringTerm | variable | obj;
+            arg.Rule = argIdentTerm + ArgIdSuffix + expr | expr;
+
+            stringTerm.AddStartEnd("'", StringOptions.None);
+
+            MakePlusRule(lines, line);
+            MakePlusRule(args, ToTerm(ArgSeparator), arg);
+            
+            // Punctuation and precedence
+            MarkPunctuation(StartObject, EndObject, StartFuncArgs, EndFuncArgs, ArgSeparator, VariablePrefix, 
+                AssignmentOperator, BeatSuffix, SecondsSuffix, TimePrefix);
+            //RegisterOperators(1, AssignmentOperator);
+            //RegisterOperators(2, MultiplicationOperator, DivisionOperator);
+
+            // // line comments (handle \n and \r\n; EOF is handled automatically)
+            CommentTerminal lineComment = new("LineComment", "//", "\n", "\r\n");
+
+            // /* block comments */
+            CommentTerminal blockComment = new("BlockComment", "/*", "*/");
+
+            // Optional: ensure comments win if you also tokenize '/'
+            lineComment.Priority = TerminalPriority.High;
+            blockComment.Priority = TerminalPriority.High;
+
+            // Tell Irony to ignore them (they won't appear as tokens/AST nodes)
+            NonGrammarTerminals.Add(lineComment);
+            NonGrammarTerminals.Add(blockComment);
+
+            this.Root = lines;
+            this.LanguageFlags = LanguageFlags.CreateAst;
+        }
+
+        public static void Parse(List<string>? input = null)
+        {
+            ParseErrors.Clear();    
+            ParseResult = null; 
+
+            if (input == null)
+            {
+                Source = """
+                // Comment before   
+                bpm(4000)
+                bpm(20,30)
+                """;
+            }
+            else
+            {
+                Source = string.Join(Environment.NewLine, input);
+            }
+
+            LanguageData lang = new(new WAParser());
+            Parser parser = new(lang);
+            Tree = parser.Parse(Source);
+
+            if (Tree.HasErrors())
+            {
+                foreach (var e in Tree.ParserMessages)
+                {
+                    ParseErrors.Add(e.Message);
+                }
+
+                return;
+            }
+
+            // Walk the parse tree
+            // Print(tree.Root, 0);
+            // Console.WriteLine(input);
+
+            var runtime = new LanguageRuntime(lang);
+            var app = new ScriptApp(runtime);
+            var thread = new ScriptThread(app);
+
+            // optional: pass variables/context to nodes via Globals
+            thread.App.Globals["vars"] = new Dictionary<string, (object, AstType)> { };
+            thread.App.Globals["settings"] = new Dictionary<string, object> { };
+
+            // Evaluate
+            ParseResult = Tree.Root.Evaluate(thread);
+        }
+
+        [Command(name: "tree", description: "Shows the last parse tree")]
+        public static void PrintTree()
+        {
+            if (Tree != null)
+            {
+                var node = Tree.Root;
+                Print(node, 0);
+            }
+        }
+
+        [Command(name: "errors",alt: "e", description: "Shows the last parse errors")]
+        public static void PrintErrors()
+        {
+            if (ParseErrors.Count > 0)
+            {
+                foreach (var e in ParseErrors)
+                {
+                    Console.WriteLine(e);
+                }
+                return;
+            }
+
+            var errorsFound = false;
+
+            if (Tree != null && Source != null)
+            {
+                var linesNode = Tree.Root.AstNode as LinesNode;
+                if (linesNode != null)
+                {
+                    foreach (var line in linesNode.ChildNodes)
+                    {
+                        if (line is TypedAstNode typedAstNode && 
+                            typedAstNode.HasError)
+                        {
+                            errorsFound = true;
+
+                            int lineNo = line.Span.Location.Line;    // 0-based
+                            int colNo = line.Span.Location.Column;
+                            
+                            var start = line.Span.Location.Position; // absolute char index
+                            var len = line.Span.Length;
+                            var lineText = Source.Substring(start, len);
+
+                            Console.WriteLine(typedAstNode.Error);
+                            Console.WriteLine($"  in line {lineNo}: {lineText}");
+                        }
+                    }
+                }
+            }
+
+            if (!errorsFound)
+            {
+                Console.WriteLine("No errors");
+            }
+        }
+
+        [Command(name: "result", alt: "r", description: "Shows the result of last parse")]
+        public static void PrintResult()
+        {
+            if (ParseResult == null)
+            {
+                Console.WriteLine("null");
+                return;
+            }
+
+            Console.WriteLine(ParseResult);
+        }
+
+        private static void Print(ParseTreeNode node, int indent)
+        {
+            Console.WriteLine(new string(' ', indent) + node);
+
+            foreach (var ch in node.ChildNodes)
+            {
+                Print(ch, indent + 2);
+            }
+        }
+    }
+}

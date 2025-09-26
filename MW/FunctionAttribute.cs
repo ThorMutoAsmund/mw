@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace MW
 {
+    using MW.Parsing;
     using System;
 
     [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
@@ -13,11 +14,16 @@ namespace MW
     {
         public string Name { get; }
         public string Description { get; }
+        public AstType AstType { get; }
+        public bool ReturnsTypedValue { get; }
 
-        public FunctionAttribute(string name, string description = "")
+        public FunctionAttribute(string name, string description = "", 
+            AstType astType = AstType.Unset, bool returnsTypedValue = false)
         {
-            Name = name;
-            Description = description;
+            this.Name = name;
+            this.Description = description;
+            this.AstType = astType;
+            this.ReturnsTypedValue = returnsTypedValue;
         }
     }
 }

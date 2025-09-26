@@ -4,7 +4,7 @@ using Irony.Interpreter.Ast;
 using Irony.Parsing;
 using System.Globalization;
 
-namespace MW.Parsing
+namespace MW.Parsing.Nodes
 {
     public class NumberNode : TypedAstNode
     {
@@ -13,12 +13,12 @@ namespace MW.Parsing
         {
             base.Init(ctx, node);
 
-            this.Type = AstType.Number;
-            this.Value = Convert.ToDouble(node.Token.Value, CultureInfo.InvariantCulture);
+            Type = AstType.Number;
+            Value = Convert.ToDouble(node.Token.Value, CultureInfo.InvariantCulture);
         }
 
-        protected override object DoEvaluate(ScriptThread thread) => this.Value;
+        protected override object DoEvaluate(ScriptThread thread) => Value;
 
-        public override string ToString() => this.Value.ToString(CultureInfo.InvariantCulture);
+        public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
     }
 }

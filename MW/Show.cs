@@ -8,10 +8,14 @@ namespace MW
 {
     public static class Show
     {
-        public static void Info(string message)
+        public static void Info(object message)
         {
             Console.WriteLine(message);
         }
+        //public static void Info(string message)
+        //{
+        //    Console.WriteLine(message);
+        //}
 
         public static void Hint(string message)
         {

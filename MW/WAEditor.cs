@@ -71,9 +71,9 @@ namespace MW
             Console.WriteLine();
         }
 
-        public static void SetDebug(string message = "")
+        public static void ShowInfo(object? message = null)
         {
-            debugMessage = message;
+            debugMessage = message?.ToString() ?? string.Empty;
         }
 
         public static void LoadText(List<string> text)

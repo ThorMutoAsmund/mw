@@ -47,10 +47,10 @@ $drm1: s("drump01.wav")
 // Leaving out keys for the named args, means the reciever has to infer the name from the type
 // Adding a sample will always make that value get the key 'sample'
 add($t1, [{$voc1, @0b}, {$voc2, @4b}])
+add($t1, repeat(3, {drm1, @0b}))
 
 
-// should the list evaluate the args?
-
+// Types of non-terminals
 
 
 

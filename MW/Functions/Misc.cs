@@ -14,36 +14,34 @@ namespace MW.Functions
     public static class Misc
     {
         [Function(name: "show", description: "Display the arguments")]
-        public static void Show(ScriptThread thread, List<TypedAstNode> args)
+        public static void ShowInfo(MethodContext context)
         {
-            foreach (var arg in args)
+            foreach (var arg in context.Args)
             {
+                var value = arg.Evaluate(context.Thread);
+
                 switch (arg.Type)
                 {
                     case AstType.Number:
                     case AstType.Time:
                     case AstType.Duration:
                         {
-                            var value = arg.Evaluate(thread);
-                            Console.WriteLine(value);
+                            WAEditor.ShowInfo(value);
                             break;
                         }
-                    case AstType.String:
+                    case AstType.Text:
                         {
-                            var value = arg.Evaluate(thread);
-                            Console.WriteLine($"\"{value}\"");
+                            WAEditor.ShowInfo($"\"{value}\"");
                             break;
                         }
                     case AstType.Object:
                         {
-                            arg.Evaluate(thread);
-                            Console.WriteLine(arg.ToString());
+                            WAEditor.ShowInfo(arg.Value.ToString());
                             break;
                         }
                     default:
                         {
-                            arg.Evaluate(thread);
-                            Console.WriteLine(arg.Type);
+                            WAEditor.ShowInfo(arg.Type);
                             break;
                         }
                 }
@@ -51,12 +49,12 @@ namespace MW.Functions
         }
 
         [Function(name: "add", description: "Display the arguments")]
-        public static double Add(ScriptThread thread, List<AstNode> args)
+        public static double Add(MethodContext context)
         {
             var sum = 0D;
-            foreach (var arg in args)
+            foreach (var arg in context.Args)
             {
-                sum += arg.EvaluateDouble(thread);
+                sum += arg.EvaluateDouble(context.Thread);
             }
 
             return sum;

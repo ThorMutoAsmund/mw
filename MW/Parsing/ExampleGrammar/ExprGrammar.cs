@@ -1,5 +1,6 @@
 ﻿using Irony.Interpreter;
 using Irony.Parsing;
+using MW.Parsing.Nodes;
 
 namespace MW.Parsing.ExampleGrammar
 {
@@ -16,13 +17,13 @@ namespace MW.Parsing.ExampleGrammar
         public ExprGrammar()
         {
             // Terminals
-            var number = new NumberLiteral<NumberNode>("number");
-            var ident = new IdentifierTerminal<IdentNode>("ident");
+            NumberLiteral<NumberNode>  number = new("number");
+            IdentifierTerminal<IdentNode>  ident = new("ident");
 
             // Non-terminals
-            var expr = new NonTerminal<BinaryExprNode>("Expr");
-            var term = new NonTerminal<BinaryExprNode>("Term");
-            var factor = new TransientNonTerminal("Factor");
+            NonTerminal<BinaryExprNode>  expr = new("Expr");
+            NonTerminal<BinaryExprNode>  term = new("Term");
+            TransientNonTerminal factor = new("Factor");
 
             // EBNF-ish rules
             expr.Rule = expr + PlusOperator + term | expr + MinusOperator + term | term;
@@ -42,8 +43,8 @@ namespace MW.Parsing.ExampleGrammar
         {
             Console.WriteLine(input);
 
-            var lang = new LanguageData(new WAGrammar());
-            var parser = new Parser(lang);
+            LanguageData lang = new(new WAParser());
+            Parser parser = new (lang);
             var tree = parser.Parse("1 + 2 * (x - 3)");
 
             if (tree.HasErrors())
@@ -59,9 +60,9 @@ namespace MW.Parsing.ExampleGrammar
             // Walk the parse tree
             Print(tree.Root, 0);
 
-            var runtime = new LanguageRuntime(lang);
-            var app = new ScriptApp(runtime);
-            var thread = new ScriptThread(app);
+            LanguageRuntime runtime = new(lang);
+            ScriptApp app = new(runtime);
+            ScriptThread thread = new(app);
 
             // optional: pass variables/context to nodes via Globals
             thread.App.Globals["vars"] = new Dictionary<string, object> { ["x"] = 10.0 };

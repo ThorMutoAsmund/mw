@@ -4,17 +4,17 @@ using Irony.Interpreter.Ast;
 using Irony.Parsing;
 using System.Globalization;
 
-namespace MW.Parsing
+namespace MW.Parsing.Nodes
 {
     public class BeatNode : TypedAstNode
     {
-        public AstNode? Child { get; private set; }
+        public NumberNode Child { get; private set; } = null!;
         public override void Init(AstContext ctx, ParseTreeNode node)
         {
             base.Init(ctx, node);
 
-            this.Child = AddChild("value", node.ChildNodes[0]);
-            this.Type = AstType.Duration;
+            Child = (AddChild("value", node.ChildNodes[0]) as NumberNode)!;
+            Type = AstType.Duration;
         }
 
         protected override object DoEvaluate(ScriptThread thread)
@@ -24,7 +24,7 @@ namespace MW.Parsing
             var bmp = settings.ContainsKey(Constants.BMP) ?
                 Convert.ToDouble(settings[Constants.BMP]) : Constants.BMPDefault;
 
-            return this.Child!.EvaluateDouble(thread) * 60.0 / bmp;
+            return Child.EvaluateDouble(thread) * 60.0 / bmp;
         }
     }
 }

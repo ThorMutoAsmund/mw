@@ -3,7 +3,7 @@ using Irony.Interpreter;
 using Irony.Interpreter.Ast;
 using Irony.Parsing;
 
-namespace MW.Parsing
+namespace MW.Parsing.Nodes
 {
     public class IdentNode : AstNode
     {
@@ -12,9 +12,9 @@ namespace MW.Parsing
         {
             base.Init(ctx, node);
 
-            this.Name = node.Token.Text;
+            Name = node.Token.Text;
         }
 
-        public override string ToString() => this.Name;
+        public override string ToString() => Name;
     }
 }

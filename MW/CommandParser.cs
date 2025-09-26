@@ -29,7 +29,7 @@ namespace MW
             var command = pSplit[0].ToLowerInvariant();
             var tail = pSplit.Length > 1 ? pSplit[1] : string.Empty;
 
-            if (command == "quit")
+            if (command == "quit" || command == "q")
             {
                 return true;
             }

@@ -10,9 +10,9 @@ namespace MW
         static void Main(string[] args)
         {
             //ExprGrammar.Test();
-            WAGrammar.Test();
+            //WAGrammar.Test();
 
-            return;
+            //return;
 
             Engine.Configure();
 

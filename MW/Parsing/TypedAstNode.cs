@@ -9,11 +9,20 @@ namespace MW.Parsing
 {
     public enum AstType
     {
-        Unset, Number, String, Object, Generator, Time, Duration, RawSample
+        Unset, Number, Text, Object, Generator, Time, Duration, RawSample
     }
 
     public abstract class TypedAstNode : AstNode
     {
         public virtual AstType Type { get; protected set; } = AstType.Unset;
+        public string Error { get; set; } = string.Empty;
+        public bool HasError => !string.IsNullOrEmpty(Error);   
+        public void SetType(AstType newType)
+        {
+            if (this.Type == AstType.Unset)
+            {
+                this.Type = newType;
+            }
+        }
     }
 }
