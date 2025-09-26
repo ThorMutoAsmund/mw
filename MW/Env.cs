@@ -12,7 +12,7 @@ namespace MW
         public static bool IsDebug = true;
         public static bool ShowHints = true;
 
-        public static string ApplicationName = $"ModularDaw";
+        public static string ApplicationName = $"ModWaves";
         public static string ApplicationNameAndVersion = $"{ApplicationName} {Assembly.GetExecutingAssembly().GetName().Version} (c) Thor Muto Asmund";
         public static string DefaultProjectNameAndExtension = "Project.json";
         public static string DownloadFolderName = "download";

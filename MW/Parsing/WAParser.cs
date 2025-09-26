@@ -21,6 +21,14 @@ namespace MW.Parsing
         public const string BeatSuffix = "b";
         public const string SecondsSuffix = "s";
         public const string TimePrefix = "@";
+        
+        public const string PlusOperator = "+";
+        public const string MinusOperator = "-";
+        public const string MultiplicationOperator = "*";
+        public const string DivisionOperator = "/";
+        public const string StartParenthesis = "(";
+        public const string EndParenthesis = ")";
+
 
         public static List<string> ParseErrors { get; private set; } = new();
         public static object? ParseResult { get; private set; } = null; 
@@ -49,6 +57,10 @@ namespace MW.Parsing
             NonTerminal<TimeNode> time = new("Time");
             NonTerminal<VariableNode> variable = new("Variable");
 
+            NonTerminal<BinaryExprNode> nexpr = new("NExpr");
+            NonTerminal<BinaryExprNode> term = new("Term");
+            TransientNonTerminal factor = new("Factor");
+
             // EBNF-ish rules
             variable.Rule = VariablePrefix + varIdentTerm;
             beat.Rule = numberTerm + BeatSuffix;
@@ -58,7 +70,12 @@ namespace MW.Parsing
             assignment.Rule = variable + AssignmentOperator + expr;
             func.Rule = funcIdentTerm + StartFuncArgs + args + EndFuncArgs;
             obj.Rule = StartObject + args + EndObject;
-            expr.Rule = func | beat | seconds | time | numberTerm | stringTerm | variable | obj;
+
+            nexpr.Rule = nexpr + PlusOperator + term | nexpr + MinusOperator + term | term;
+            term.Rule = term + MultiplicationOperator + factor | term + DivisionOperator + factor | factor;
+            factor.Rule = beat | seconds | time | numberTerm | variable | StartParenthesis + nexpr + EndParenthesis;
+
+            expr.Rule = func | nexpr | stringTerm | obj;
             arg.Rule = argIdentTerm + ArgIdSuffix + expr | expr;
 
             stringTerm.AddStartEnd("'", StringOptions.None);

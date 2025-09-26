@@ -23,10 +23,18 @@ namespace MW.Functions
                 switch (arg.Type)
                 {
                     case AstType.Number:
-                    case AstType.Time:
-                    case AstType.Duration:
                         {
                             WAEditor.ShowInfo(value);
+                            break;
+                        }
+                    case AstType.Time:
+                        {
+                            WAEditor.ShowInfo($"@{value}s");
+                            break;
+                        }
+                    case AstType.Duration:
+                        {
+                            WAEditor.ShowInfo($"{value}s");
                             break;
                         }
                     case AstType.Text:
@@ -46,18 +54,6 @@ namespace MW.Functions
                         }
                 }
             }
-        }
-
-        [Function(name: "add", description: "Display the arguments")]
-        public static double Add(MethodContext context)
-        {
-            var sum = 0D;
-            foreach (var arg in context.Args)
-            {
-                sum += arg.EvaluateDouble(context.Thread);
-            }
-
-            return sum;
         }
     }
 }
