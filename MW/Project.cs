@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MW
 {
-    public class Project
+    public static class Project
     {
         [Command(name:"close", description: "Close project")]
         public static void Close()
@@ -23,7 +23,7 @@ namespace MW
                 return;
             }
 
-            Env.Loaded = false;
+            Env.IsProjectLoaded = false;
             Env.ChangesMade = false;
 
             Show.Hint("Closed project");
@@ -57,25 +57,15 @@ namespace MW
             }
 
             // Load project file
-            Project? newProject;
+            //Project? newProject;
 
-            try
-            {
-                var json = File.ReadAllText(filePath);
-                newProject = JsonConvert.DeserializeObject<Project>(json);
-            }
-            catch (Exception ex)
-            {
-                Show.Error($"Error deserializing project file: {ex.Message}");
-
-                return false;
-            }
+            var newProject = File.ReadAllLines(filePath);
 
             if (newProject != null)
             {
+                WAEditor.LoadText(newProject);
                 Env.ProjectPath = path;
-                Env.Project = newProject;
-                Env.Loaded = true;
+                Env.IsProjectLoaded = true;
                 Env.ChangesMade = false;
 
                 var fullPath = Path.GetFullPath(filePath);
@@ -87,6 +77,19 @@ namespace MW
             return false;
         }
 
+        public static void DoSave()
+        {
+            if (Env.IsProjectLoaded)
+            {
+                var filePath = Path.Combine(Env.ProjectPath, Env.DefaultProjectNameAndExtension);
+
+                EnsurePaths(Env.ProjectPath);
+
+                // Save project file
+                File.WriteAllLines(filePath, WAEditor.Lines);
+            }
+        }
+
         [Command(name: "save", description: "Save project")]
         public static void Save()
         {
@@ -95,14 +98,7 @@ namespace MW
                 return;
             }
 
-            var filePath = Path.Combine(Env.ProjectPath, Env.DefaultProjectNameAndExtension);
-
-            EnsurePaths(Env.ProjectPath);
-
-            // Save project file
-            string json = JsonConvert.SerializeObject(Env.Project);
-
-            File.WriteAllText(filePath, json);
+            DoSave();
 
             Show.Hint($"Saved project file");
         }

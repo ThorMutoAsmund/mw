@@ -14,16 +14,16 @@ namespace MW
 
         public static string ApplicationName = $"ModWaves";
         public static string ApplicationNameAndVersion = $"{ApplicationName} {Assembly.GetExecutingAssembly().GetName().Version} (c) Thor Muto Asmund";
-        public static string DefaultProjectNameAndExtension = "Project.json";
+        public static string DefaultProjectNameAndExtension = "Project.mw.txt";
         public static string DownloadFolderName = "download";
         public static string CacheFolderName = "cache";
         public static string PluginsFolderName = "plugins";
         public static string ToolsPath = "../../../tools/";
 
-        public static bool Loaded = IsDebug ? true : false;
+        public static bool IsProjectLoaded = false;
         public static bool ChangesMade = false;
         public static string ProjectPath = IsDebug ? "../../../projects/default" : string.Empty;
-        public static Project Project { get; set; } = new Project();
+        //public static Project Project { get; set; } = new Project();
 
 
         [Command(name: "hints", arguments:"[on|off|Ø]", description: "Toggle hints")]

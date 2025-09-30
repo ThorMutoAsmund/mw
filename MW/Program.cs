@@ -6,17 +6,24 @@ namespace MW
 {
     internal class Program
     {
-
         static void Main(string[] args)
         {
-            //ExprGrammar.Test();
-            //WAGrammar.Test();
+            WAEditor.Recalc += lines =>
+            {
+                WAParser.Parse(lines);
+                Project.DoSave();
+            };
 
-            //return;
+            // Read project file
+            if (Env.IsDebug)
+            {
+                Project.TryLoadDefault();
+            }
 
-            Engine.Configure();
+            // Center
+            WindowHelper.CenterWindow();
 
-            Startup.Run();
+            // Start editor
             WAEditor.Run();
 
             Show.Info("Goodbye!");

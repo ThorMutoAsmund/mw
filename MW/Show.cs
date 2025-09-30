@@ -45,7 +45,7 @@ namespace MW
 
         public static bool NoProjectLoaded(bool silent = false)
         {
-            if (!Env.Loaded)
+            if (!Env.IsProjectLoaded)
             {
                 if (!silent)
                 {
@@ -59,7 +59,7 @@ namespace MW
 
         public static bool OkToDiscardChanges()
         {
-            if (Env.Loaded && Env.ChangesMade)
+            if (Env.IsProjectLoaded && Env.ChangesMade)
             {
                 var doQuit = Show.Confirm("Changes have been made. Are you sure you want to continue?");
                 return doQuit;

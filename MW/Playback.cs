@@ -7,6 +7,20 @@ namespace MW
         private static WaveStream? fileReader;
         public static WaveOutEvent WaveOut { get; private set; } = new WaveOutEvent();
 
+        public static bool Toggle(string srcName)
+        {
+            if (WaveOut.PlaybackState == PlaybackState.Stopped)
+            {
+                Play(srcName);
+                return true;
+            }
+            else
+            {
+                Stop();
+                return false;
+            }
+        }
+
         [Command(name: "stop", description: "Stop playback")]
         public static void Stop()
         {
@@ -16,14 +30,15 @@ namespace MW
         [Command(name: "play", arguments:"[<sample>|Ø]", description: "Play sample or resume current playback")]
         public static void Play(string srcName)
         {
-            if (fileReader == null)
-            {
-                Show.Error($"No file to play");
-                return;
-            }
 
             if (string.IsNullOrEmpty(srcName))
             {
+                if (fileReader == null)
+                {
+                    Show.Error($"No file to play");
+                    return;
+                }
+
                 if (WaveOut.PlaybackState == PlaybackState.Stopped)
                 {
                     WaveOut.Play();

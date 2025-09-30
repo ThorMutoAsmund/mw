@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using MW.Parsing;
+using System.Text;
 
 namespace MW
 {
@@ -6,7 +7,11 @@ namespace MW
     {
         public static event Action<List<string>>? Recalc;
 
-        static readonly List<string> lines = new() { "" };
+        public static List<string> Lines { get; } = new() { "" };
+
+        // Colors
+        static ConsoleColor? origForegroundColor = null;
+        static ConsoleColor? origBackgroundColor = null;
 
         // Cursor in buffer (column, row) — NOT screen coordinates
         static int cx = 0;
@@ -29,15 +34,31 @@ namespace MW
             Console.Clear();
 
             // Repeat until quit / Ctrl+Q
+            var startInCommandMode = !Env.IsProjectLoaded;
+
             for (; ; )
             {
+                // Enter command mode from the start?
+                if (startInCommandMode)
+                {
+                    Render(commandMode: true);
+
+                    if (RunCommandMode())
+                    {
+                        break;
+                    }
+
+                    SetColor();
+                    //continue;
+                    startInCommandMode = false;
+                }
+
                 Render();
                 var key = Console.ReadKey(intercept: true);
-                var wantsToQuit = (key.Key == ConsoleKey.Q && (key.Modifiers & ConsoleModifiers.Control) != 0);
 
-                if (wantsToQuit || key.Key == ConsoleKey.Escape)
+                if ((key.Modifiers & ConsoleModifiers.Control) != 0)
                 {
-                    if (wantsToQuit)
+                    if (key.Key == ConsoleKey.Q)
                     {
                         if (Show.OkToDiscardChanges())
                         {
@@ -49,6 +70,21 @@ namespace MW
                         Render(commandMode: true);
                         continue;
                     }
+                    else if (key.Key == ConsoleKey.Spacebar)
+                    {
+                        if (WAParser.ParseResult != null && WAParser.Tree?.Root.AstNode is TypedAstNode typedAstNode && 
+                            typedAstNode.Type == AstType.RawSample && WAParser.ParseResult is string sample)
+                        {
+                            var isPlaying = Playback.Toggle(sample);
+                            ShowInfo(isPlaying ? "Playing..." : "Stopped");
+                        }
+                        continue;
+                    }
+                }
+
+
+                if (key.Key == ConsoleKey.Escape)
+                {
                     Render(commandMode: true);
 
                     if (RunCommandMode())
@@ -76,10 +112,10 @@ namespace MW
             debugMessage = message?.ToString() ?? string.Empty;
         }
 
-        public static void LoadText(List<string> text)
+        public static void LoadText(string[] text)
         {
-            lines.Clear();
-            lines.AddRange(text);
+            Lines.Clear();
+            Lines.AddRange(text);
         }
 
         private static void HandleKey(ConsoleKeyInfo k)
@@ -119,22 +155,22 @@ namespace MW
             else if (cy > 0) 
             { 
                 cy--; 
-                cx = lines[cy].Length;
-                Recalc?.Invoke(lines);
+                cx = Lines[cy].Length;
+                Recalc?.Invoke(Lines);
             }
         }
 
         private static void MoveRight()
         {
-            if (cx < lines[cy].Length)
+            if (cx < Lines[cy].Length)
             {
                 cx++;
             }
-            else if (cy < lines.Count - 1) 
+            else if (cy < Lines.Count - 1) 
             { 
                 cy++; 
                 cx = 0;
-                Recalc?.Invoke(lines);
+                Recalc?.Invoke(Lines);
             }
         }
 
@@ -143,18 +179,18 @@ namespace MW
             if (cy > 0)
             { 
                 cy--; 
-                cx = Math.Min(cx, lines[cy].Length);
-                Recalc?.Invoke(lines);
+                cx = Math.Min(cx, Lines[cy].Length);
+                Recalc?.Invoke(Lines);
             }
         }
 
         private static void MoveDown()
         {
-            if (cy < lines.Count - 1) 
+            if (cy < Lines.Count - 1) 
             { 
                 cy++; 
-                cx = Math.Min(cx, lines[cy].Length);
-                Recalc?.Invoke(lines);
+                cx = Math.Min(cx, Lines[cy].Length);
+                Recalc?.Invoke(Lines);
             }
         }
 
@@ -165,7 +201,7 @@ namespace MW
                 if (cy != 0)
                 {
                     cy = 0;
-                    Recalc?.Invoke(lines);
+                    Recalc?.Invoke(Lines);
                 }
             }
 
@@ -176,14 +212,14 @@ namespace MW
         {
             if ((k.Modifiers & ConsoleModifiers.Control) != 0) 
             { 
-                if (cy != lines.Count - 1)
+                if (cy != Lines.Count - 1)
                 {
-                    cy = lines.Count - 1;
-                    Recalc?.Invoke(lines);
+                    cy = Lines.Count - 1;
+                    Recalc?.Invoke(Lines);
                 }
             }
             
-            cx = lines[cy].Length;
+            cx = Lines[cy].Length;
         }
 
         private static void PageUp()
@@ -192,65 +228,65 @@ namespace MW
             if (cy != newCy)
             {
                 cy = newCy;
-                Recalc?.Invoke(lines);
+                Recalc?.Invoke(Lines);
             }
 
-            cx = Math.Min(cx, lines[cy].Length);
+            cx = Math.Min(cx, Lines[cy].Length);
         }
 
         private static void PageDown()
         {
-            var newCy = Math.Min(lines.Count - 1, cy + Math.Max(1, Console.WindowHeight - 2));
+            var newCy = Math.Min(Lines.Count - 1, cy + Math.Max(1, Console.WindowHeight - 2));
             if (cy != newCy)
             {
                 cy = newCy;
-                Recalc?.Invoke(lines);
+                Recalc?.Invoke(Lines);
             }
 
-            cx = Math.Min(cx, lines[cy].Length);
+            cx = Math.Min(cx, Lines[cy].Length);
         }
 
         private static void Backspace()
         {
             if (cx > 0)
             {
-                lines[cy] = lines[cy].Remove(cx - 1, 1);
+                Lines[cy] = Lines[cy].Remove(cx - 1, 1);
                 cx--;
             }
             else if (cy > 0)
             {
-                int prevLen = lines[cy - 1].Length;
-                lines[cy - 1] = lines[cy - 1] + lines[cy];
-                lines.RemoveAt(cy);
+                int prevLen = Lines[cy - 1].Length;
+                Lines[cy - 1] = Lines[cy - 1] + Lines[cy];
+                Lines.RemoveAt(cy);
                 cy--; 
                 cx = prevLen;
-                Recalc?.Invoke(lines);
+                Recalc?.Invoke(Lines);
             }
         }
 
         private static void Delete()
         {
-            if (cx < lines[cy].Length)
+            if (cx < Lines[cy].Length)
             {
-                lines[cy] = lines[cy].Remove(cx, 1);
+                Lines[cy] = Lines[cy].Remove(cx, 1);
             }
-            else if (cy < lines.Count - 1)
+            else if (cy < Lines.Count - 1)
             {
-                lines[cy] = lines[cy] + lines[cy + 1];
-                lines.RemoveAt(cy + 1);
+                Lines[cy] = Lines[cy] + Lines[cy + 1];
+                Lines.RemoveAt(cy + 1);
             }
         }
 
         private static void InsertNewLine()
         {
-            string line = lines[cy];
+            string line = Lines[cy];
             string left = line.Substring(0, cx);
             string right = line.Substring(cx);
-            lines[cy] = left;
-            lines.Insert(cy + 1, right);
+            Lines[cy] = left;
+            Lines.Insert(cy + 1, right);
             cy++; 
             cx = 0;
-            Recalc?.Invoke(lines);
+            Recalc?.Invoke(Lines);
         }
 
         private static void InsertTab()
@@ -262,14 +298,14 @@ namespace MW
 
         private static void InsertText(string s)
         {
-            lines[cy] = lines[cy].Insert(cx, s);
+            Lines[cy] = Lines[cy].Insert(cx, s);
             cx += s.Length;
         }
 
         private static void ClampCursor()
         {
-            cy = Math.Max(0, Math.Min(cy, lines.Count - 1));
-            cx = Math.Max(0, Math.Min(cx, lines[cy].Length));
+            cy = Math.Max(0, Math.Min(cy, Lines.Count - 1));
+            cx = Math.Max(0, Math.Min(cx, Lines[cy].Length));
         }
 
         private static void EnsureCursorVisible()
@@ -301,9 +337,9 @@ namespace MW
                 int bufRow = top + row;
                 Console.SetCursorPosition(0, row);
 
-                if (bufRow >= 0 && bufRow < lines.Count)
+                if (bufRow >= 0 && bufRow < Lines.Count)
                 {
-                    var line = lines[bufRow];
+                    var line = Lines[bufRow];
                     string slice = Slice(line, left, width);
                     WritePadded(slice, width);
                 }
@@ -331,7 +367,7 @@ namespace MW
             {
                 for (int row = height -  commandAreaHeight; row < height; row++)
                 {
-                    Console.ResetColor();
+                    ResetColor();
 
                     Console.SetCursorPosition(0, row);
                     for (int col = 0; col < width; col++)
@@ -353,12 +389,28 @@ namespace MW
 
         static void SetColor()
         {
+            // Save colors
+            if (origForegroundColor == null)
+            {
+                origForegroundColor = Console.ForegroundColor;
+            }
+            if (origBackgroundColor == null)
+            {
+                origBackgroundColor = Console.BackgroundColor;
+            }
+
             // Blue background
             var r = "22";
             var g = "0";
             var b = "100";
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write($"\u001b[48;2;{r};{g};{b}m");
+        }
+
+        static void ResetColor()
+        {
+            Console.BackgroundColor = origBackgroundColor ?? ConsoleColor.Black;
+            Console.ForegroundColor = origForegroundColor ?? ConsoleColor.White;
         }
 
         static void WritePadded(string content, int width, bool invert = false)
@@ -395,7 +447,7 @@ namespace MW
             {
                 var key = Console.ReadKey(intercept: true);
 
-                if (key.Key == ConsoleKey.Escape)
+                if (key.Key == ConsoleKey.Escape && Env.IsProjectLoaded)
                 {
                     return false;
                 }

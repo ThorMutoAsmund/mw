@@ -3,7 +3,7 @@ using System.Text;
 
 namespace MW
 {
-    public static class Startup
+    public static class WindowHelper
     {
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern IntPtr GetConsoleWindow();
@@ -22,19 +22,7 @@ namespace MW
 
         struct RECT { public int Left, Top, Right, Bottom; }
 
-        public static void Run()
-        {
-            // Read project file
-            if (Env.IsDebug)
-            {
-                Project.TryLoadDefault();
-            }
-
-            // Center
-            CenterWindow();
-        }
-
-        private static void CenterWindow()
+        public static void CenterWindow()
         {
             IntPtr hWnd = GetConsoleWindow();
             if (hWnd == IntPtr.Zero) return;
