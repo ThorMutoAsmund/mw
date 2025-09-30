@@ -10,7 +10,7 @@ namespace MW
 {
     public static class Project
     {
-        [Command(name:"close", description: "Close project")]
+        [Function(isCommandLine: true, name:"close", description: "Close project")]
         public static void Close()
         {
             if (Show.NoProjectLoaded())
@@ -24,7 +24,7 @@ namespace MW
             }
 
             Env.IsProjectLoaded = false;
-            Env.ChangesMade = false;
+            Env.AreChangesMade = false;
 
             Show.Hint("Closed project");
         }
@@ -39,7 +39,7 @@ namespace MW
             }
         }
 
-        [Command(name:"load", arguments:"<project_file>", description: "Load project")]
+        [Function(isCommandLine: true, name:"load", arguments:"<project_file>", description: "Load project")]
         public static bool Load(string path)
         {
             var filePath = Path.Combine(path, Env.DefaultProjectNameAndExtension);
@@ -66,7 +66,7 @@ namespace MW
                 WAEditor.LoadText(newProject);
                 Env.ProjectPath = path;
                 Env.IsProjectLoaded = true;
-                Env.ChangesMade = false;
+                Env.AreChangesMade = false;
 
                 var fullPath = Path.GetFullPath(filePath);
                 Show.Hint($"Loaded project file: {fullPath}");
@@ -90,7 +90,7 @@ namespace MW
             }
         }
 
-        [Command(name: "save", description: "Save project")]
+        [Function(isCommandLine: true, name: "save", description: "Save project")]
         public static void Save()
         {
             if (Show.NoProjectLoaded())
@@ -103,7 +103,7 @@ namespace MW
             Show.Hint($"Saved project file");
         }
 
-        [Command(name: "list", description: "List audio files")]
+        [Function(isCommandLine: true, name: "list", alt: "l", description: "List audio files")]
         public static void List()
         {
             if (Show.NoProjectLoaded())
@@ -119,7 +119,7 @@ namespace MW
             }
         }
 
-        [Command(name: "touch", arguments:"<file_name>", description: "Create empty audio file")]
+        [Function(isCommandLine: true, name: "touch", arguments:"<file_name>", description: "Create empty audio file")]
         public static void Touch(string fileName)
         {
             if (Show.NoProjectLoaded())
@@ -127,12 +127,12 @@ namespace MW
                 return;
             }
 
-            Env.ChangesMade = true;
+            Env.AreChangesMade = true;
             
             Show.Hint("Touched");
         }
 
-        [Command(name: "clear", description: "Clear cache")]
+        [Function(isCommandLine: true, name: "clear", description: "Clear cache")]
         public static void ClearCache()
         {
             if (Show.NoProjectLoaded())

@@ -21,13 +21,13 @@ namespace MW
             }
         }
 
-        [Command(name: "stop", description: "Stop playback")]
+        [Function(isCommandLine: true, name: "stop", description: "Stop playback")]
         public static void Stop()
         {
             EnsureStopped();
         }
 
-        [Command(name: "play", arguments:"[<sample>|Ø]", description: "Play sample or resume current playback")]
+        [Function(isCommandLine: true, name: "play", arguments:"[<sample>|Ø]", description: "Play sample or resume current playback")]
         public static void Play(string srcName)
         {
 
@@ -86,6 +86,13 @@ namespace MW
 
             message = string.Empty;
             return true;
+        }
+
+        public static string[] GetAllSamples()
+        {
+            var downloadFolderPath = Path.Combine(Env.ProjectPath, Env.DownloadFolderName);
+
+            return Directory.GetFiles(downloadFolderPath, "*.wav");
         }
 
         public static void Reset()

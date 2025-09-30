@@ -11,7 +11,7 @@ namespace MW.Commands
     {
         private static string YTToolname = "yt-dlp.exe";
 
-        [Command(name: "yt", arguments: "<url>", description: "Download mp3 from YouTube")]
+        [Function(isCommandLine: true, name: "yt", arguments: "<url>", description: "Download mp3 from YouTube")]
         public static void Download(string url)
         {
             // Debug url

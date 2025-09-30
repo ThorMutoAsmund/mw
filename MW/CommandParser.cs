@@ -10,8 +10,8 @@ namespace MW
 {   
     public static class CommandParser
     {
-        private static List<(MethodInfo MethodInfo, CommandAttribute Command)>? _commands;
-        private static List<(MethodInfo MethodInfo, CommandAttribute Command)> commands
+        private static List<(MethodInfo MethodInfo, FunctionAttribute Command)>? _commands;
+        private static List<(MethodInfo MethodInfo, FunctionAttribute Command)> commands
         {
             get
             {
@@ -39,7 +39,7 @@ namespace MW
             return false;
         }
 
-        [Command(name: "help", alt: "h", description: "Show this list")]
+        [Function(isCommandLine: true, name: "help", alt: "h", description: "Show this list")]
         public static void ShowHelp()
         {
             var commandNameMaxLength = commands.Max(c => c.Command.NameWithAlt.Length);
@@ -53,7 +53,37 @@ namespace MW
             }
         }
 
-        private static List<(MethodInfo MethodInfo, CommandAttribute Command)> FindCommands()
+        [Function(isCommandLine: true, name: "info", alt: "i", description: "Show info about current project")]
+        public static void ShowInfo()
+        {
+            if (!Env.IsProjectLoaded)
+            {
+                Show.Info("No project loaded");
+                return;
+            }
+
+            Show.Info($"Project: {Env.ProjectPath}");
+            Show.Info($"Status: {(Env.AreChangesMade?"Changes made":"Changes saved")}");
+            Show.Info($"Number of samples: {Playback.GetAllSamples().Length}");
+            Show.Info($"Memory used: {Playback.GetAllSamples().Length}");
+
+            long privateBytes;
+            using (var p = System.Diagnostics.Process.GetCurrentProcess())
+                privateBytes = p.PrivateMemorySize64;
+
+            long workingSetBytes;
+            using (var p = System.Diagnostics.Process.GetCurrentProcess())
+                workingSetBytes = p.WorkingSet64;
+
+            Show.Info($"Memory used (private/working set): {Bytes(privateBytes)}/{Bytes(workingSetBytes)}");
+        }
+
+        private static string Bytes(long b) =>
+            b >= 1L << 30 ? $"{b / (1L << 30):0.##} GB" :
+            b >= 1L << 20 ? $"{b / (1L << 20):0.##} MB" :
+            b >= 1L << 10 ? $"{b / (1L << 10):0.##} KB" : $"{b} B";
+
+        private static List<(MethodInfo MethodInfo, FunctionAttribute Command)> FindCommands()
         {
             var asm = Assembly.GetExecutingAssembly();
 
@@ -62,8 +92,8 @@ namespace MW
             return asm
                 .GetTypes()
                 .SelectMany(t => t.GetMethods(flags))
-                .Select(m => (Method: m, Attr: m.GetCustomAttribute<CommandAttribute>(inherit: false)!))
-                .Where(x => x.Attr != null).ToList();
+                .Select(m => (Method: m, Attr: m.GetCustomAttribute<FunctionAttribute>(inherit: false)!))
+                .Where(x => x.Attr != null && x.Attr.IsCommandLine).ToList();
         }
 
         private static void ExecuteCommand(string commandName, string tail)

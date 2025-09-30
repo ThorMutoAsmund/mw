@@ -118,7 +118,7 @@ namespace MW.Parsing.Nodes
                 .GetTypes()
                 .SelectMany(t => t.GetMethods(flags))
                 .Select(m => (Method: m, Attr: m.GetCustomAttribute<FunctionAttribute>(inherit: false)!))
-                .Where(x => x.Attr != null).ToList();
+                .Where(x => x.Attr != null && !x.Attr.IsCommandLine).ToList();
         }
 
     }

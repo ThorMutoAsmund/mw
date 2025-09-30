@@ -13,7 +13,7 @@ namespace MW.Functions
 {
     public static class Song
     {
-        [Function(name: "bpm", description: "Cut a part of a sample")]
+        [Function(name: "bpm", description: "Set project BPM")]
         public static void BPM(MethodContext context)
         {
             Func.ValidateArgs(nameof(BPM), context, 1);
@@ -26,7 +26,7 @@ namespace MW.Functions
         }
 
         [Function(name: "time", returnsTypedValue: true, description: "Add a duration to a time")]
-        public static Tuple<object,AstType> Time(MethodContext context)
+        public static Tuple<object, AstType> Time(MethodContext context)
         {
             Func.ValidateArgs(nameof(Time), context, 2);
 

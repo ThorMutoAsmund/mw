@@ -155,7 +155,7 @@ namespace MW.Parsing
             ParseResult = Tree.Root.Evaluate(thread);
         }
 
-        [Command(name: "tree", description: "Shows the last parse tree")]
+        [Function(isCommandLine: true, name: "tree", description: "Shows the last parse tree")]
         public static void PrintTree()
         {
             if (Tree != null)
@@ -165,7 +165,7 @@ namespace MW.Parsing
             }
         }
 
-        [Command(name: "errors",alt: "e", description: "Shows the last parse errors")]
+        [Function(isCommandLine: true, name: "errors",alt: "e", description: "Shows the last parse errors")]
         public static void PrintErrors()
         {
             if (ParseErrors.Count > 0)
@@ -211,7 +211,7 @@ namespace MW.Parsing
             }
         }
 
-        [Command(name: "result", alt: "r", description: "Shows the result of last parse")]
+        [Function(isCommandLine: true, name: "result", alt: "r", description: "Shows the result of last parse")]
         public static void PrintResult()
         {
             if (ParseResult == null)

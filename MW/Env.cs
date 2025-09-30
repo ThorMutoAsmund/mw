@@ -21,12 +21,12 @@ namespace MW
         public static string ToolsPath = "../../../tools/";
 
         public static bool IsProjectLoaded = false;
-        public static bool ChangesMade = false;
+        public static bool AreChangesMade = false;
         public static string ProjectPath = IsDebug ? "../../../projects/default" : string.Empty;
         //public static Project Project { get; set; } = new Project();
 
 
-        [Command(name: "hints", arguments:"[on|off|Ø]", description: "Toggle hints")]
+        [Function(isCommandLine: true, name: "hints", arguments:"[on|off|Ø]", description: "Toggle hints")]
         public static void SetHints(string value)
         {
             switch (value)
