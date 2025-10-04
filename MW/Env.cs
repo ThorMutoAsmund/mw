@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MW.Audio;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -18,11 +19,13 @@ namespace MW
         public static string DownloadFolderName = "download";
         public static string CacheFolderName = "cache";
         public static string PluginsFolderName = "plugins";
-        public static string ToolsPath = "../../../tools/";
+        public static string ToolsPath = "..\\..\\..\\tools\\";
 
         public static bool IsProjectLoaded = false;
         public static bool AreChangesMade = false;
-        public static string ProjectPath = IsDebug ? "../../../projects/default" : string.Empty;
+        public static string ProjectPath = IsDebug ? "..\\..\\..\\projects\\default" : string.Empty;
+        public static Song Song = Song.EmptySong;
+        
         //public static Project Project { get; set; } = new Project();
 
 

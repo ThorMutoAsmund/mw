@@ -64,8 +64,7 @@ namespace MW
 
             Show.Info($"Project: {Env.ProjectPath}");
             Show.Info($"Status: {(Env.AreChangesMade?"Changes made":"Changes saved")}");
-            Show.Info($"Number of samples: {Playback.GetAllSamples().Length}");
-            Show.Info($"Memory used: {Playback.GetAllSamples().Length}");
+            Show.Info($"Number of samples: {Project.GetAudioFiles().Length}");
 
             long privateBytes;
             using (var p = System.Diagnostics.Process.GetCurrentProcess())

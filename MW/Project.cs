@@ -10,6 +10,8 @@ namespace MW
 {
     public static class Project
     {
+        public static string[] SupportedFormats { get; private set; } = ["wav", "mp3"];
+
         [Function(isCommandLine: true, name:"close", description: "Close project")]
         public static void Close()
         {
@@ -151,17 +153,23 @@ namespace MW
             }
         }
 
-        private static List<string> GetAudioFiles()
+        public static string[] GetAudioFiles(bool onlyFileName = true)
         {
-            if (Show.NoProjectLoaded(silent: true))
+            if (!Env.IsProjectLoaded)
             {
                 return [];
             }
 
-            var path = Path.Combine(Env.ProjectPath, Env.DownloadFolderName);
-            var files = Directory.EnumerateFiles(String.IsNullOrEmpty(path) ? "." : path);
+            var downloadFolderPath = Path.Combine(Env.ProjectPath, Env.DownloadFolderName);
+            var list = Directory.EnumerateFiles(downloadFolderPath, "*", SearchOption.TopDirectoryOnly)
+                .Where(p => IsAudioFile(p));
 
-            return files.Where(f => IsAudioFile(f)).Select(f => Path.GetFileName(f)).ToList();
+            if (onlyFileName)
+            {
+                list = list.Select(p => Path.GetFileName(p));
+            }
+
+            return list.ToArray();
         }
 
         private static void EnsurePaths(string path)
@@ -195,13 +203,42 @@ namespace MW
             }
         }
 
-        private static bool IsAudioFile(string fileName)
+        public static bool SrcExists(string srcName, out string message, out string filePath)
         {
-            if (Path.GetExtension(fileName) == ".wav")
+            var downloadFolder = Path.Combine(Env.ProjectPath, Env.DownloadFolderName);
+            filePath = Path.Combine(downloadFolder, srcName);
+
+            var s = 0;
+            while (!File.Exists(filePath))
             {
-                return true;
+                if (s >= SupportedFormats.Length)
+                {
+                    message = $"File not found: {srcName}";
+                    return false;
+                }
+                filePath = Path.Combine(downloadFolder, $"{srcName}.{SupportedFormats[s]}");
+                s++;
             }
-            return false;
+
+            if (!Project.IsAudioFile(filePath))
+            {
+                message = "Src not a supported audio file";
+                return false;
+            }
+
+            message = string.Empty;
+            return true;
+        }
+
+        public static bool IsAudioFile(string fileNameOrPath)
+        {
+            var ext = Path.GetExtension(fileNameOrPath);
+            if (string.IsNullOrEmpty(ext))
+            {
+                return false;
+            }
+
+            return SupportedFormats.Contains(ext.Substring(1));
         }
     }
 }

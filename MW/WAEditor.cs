@@ -72,12 +72,9 @@ namespace MW
                     }
                     else if (key.Key == ConsoleKey.Spacebar)
                     {
-                        if (WAParser.ParseResult != null && WAParser.Tree?.Root.AstNode is TypedAstNode typedAstNode && 
-                            typedAstNode.Type == AstType.RawSample && WAParser.ParseResult is string sample)
-                        {
-                            var isPlaying = Playback.Toggle(sample);
-                            ShowInfo(isPlaying ? "Playing..." : "Stopped");
-                        }
+                        var isPlaying = Playback.PlaySong();
+                        ShowInfo(isPlaying ? "Playing..." : "Stopped");
+
                         continue;
                     }
                 }
@@ -449,6 +446,9 @@ namespace MW
 
                 if (key.Key == ConsoleKey.Escape && Env.IsProjectLoaded)
                 {
+                    // Always stop before returning to editor
+                    Playback.Stop();
+
                     return false;
                 }
                 else if (key.Key == ConsoleKey.Q && (key.Modifiers & ConsoleModifiers.Control) != 0)

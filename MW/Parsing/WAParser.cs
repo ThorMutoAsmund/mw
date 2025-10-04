@@ -1,6 +1,7 @@
 ﻿using Irony.Interpreter;
 //using Irony.Interpreter.Ast;
 using Irony.Parsing;
+using MW.Audio;
 using MW.Parsing.Nodes;
 using System;
 using System.Xml.Linq;
@@ -153,6 +154,7 @@ namespace MW.Parsing
 
             // Evaluate
             ParseResult = Tree.Root.Evaluate(thread);
+            Env.Song = ParseResult != null ? Song.FromParseResult(ParseResult) : Song.EmptySong;
         }
 
         [Function(isCommandLine: true, name: "tree", description: "Shows the last parse tree")]

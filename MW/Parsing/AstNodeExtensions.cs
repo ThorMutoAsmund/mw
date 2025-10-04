@@ -21,7 +21,7 @@ namespace MW.Parsing
             return Convert.ToString(node.Evaluate(thread));
         }
 
-        public static T? Evaluate<T>(this ParseTreeNode node, ScriptThread thread) where T: class
+        public static T? Evaluate<T>(this AstNode node, ScriptThread thread) where T: class
         {
             return (node.Evaluate(thread)) as T;
         }

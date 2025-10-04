@@ -1,6 +1,9 @@
 // Welcome
 /* hej */
-s("abc.wav")
+$s1: s("m1voc.mp3")
+$t1: t($s1)
+$t2: t($s1, $t1)
+
 
 
 

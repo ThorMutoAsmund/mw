@@ -42,9 +42,15 @@ namespace MW.Functions
                             WAEditor.ShowInfo($"\"{value}\"");
                             break;
                         }
-                    case AstType.RawSample:
+                    case AstType.CSObject:
                         {
-                            WAEditor.ShowInfo($"Sample({value})");
+                            var output = value.GetType().Name;
+                            var valueString = value.ToString();
+                            if (!string.IsNullOrEmpty(valueString) && valueString != output)
+                            {
+                                output = $"{output} ({valueString})";
+                            }
+                            WAEditor.ShowInfo(output);
                             break;
                         }
                     case AstType.Object:
