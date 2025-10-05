@@ -32,7 +32,7 @@ namespace MW.Audio
 
         public Sample GetOrCreateSample(string src)
         {
-            var sample = this.Samples.FirstOrDefault(s => s.Src == src);
+            var sample = this.Samples.FirstOrDefault(s => s.SrcPath == src);
             if (sample != null)
             {
                 return sample;

@@ -8,9 +8,8 @@ namespace MW.Audio
 {
     public class Container : SongElement
     {
-        public List<Container> Containers { get; private set; } = [];
         public List<Instance> Instances { get; private set; } = [];
 
-        public override string ToString() => nameof(Container);
+        public override string ToString() => $"{nameof(Container)} with {this.Instances.Count} element(s)";
     }
 }

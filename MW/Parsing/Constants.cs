@@ -8,6 +8,7 @@ namespace MW.Parsing
 {
     public static class Constants
     {
+        public static string SongVarName = "song";
         // Default values
         public static double BMPDefault = 120.0;
 

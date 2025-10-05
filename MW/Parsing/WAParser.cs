@@ -82,7 +82,7 @@ namespace MW.Parsing
             stringTerm.AddStartEnd("'", StringOptions.None);
 
             MakePlusRule(lines, line);
-            MakePlusRule(args, ToTerm(ArgSeparator), arg);
+            MakeStarRule(args, ToTerm(ArgSeparator), arg);
             
             // Punctuation and precedence
             MarkPunctuation(StartObject, EndObject, StartFuncArgs, EndFuncArgs, ArgSeparator, VariablePrefix, 
