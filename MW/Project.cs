@@ -232,13 +232,23 @@ namespace MW
 
         public static bool IsAudioFile(string fileNameOrPath)
         {
-            var ext = Path.GetExtension(fileNameOrPath);
+            var ext = Path.GetExtension(fileNameOrPath).ToLowerInvariant();
             if (string.IsNullOrEmpty(ext))
             {
                 return false;
             }
 
             return SupportedFormats.Contains(ext.Substring(1));
+        }
+        public static bool IsWavFile(string fileNameOrPath)
+        {
+            var ext = Path.GetExtension(fileNameOrPath).ToLowerInvariant();
+            if (string.IsNullOrEmpty(ext))
+            {
+                return false;
+            }
+
+            return ext == ".wav";
         }
     }
 }

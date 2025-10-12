@@ -27,7 +27,7 @@ namespace MW.Parsing.Nodes
 
             Type = Operand.Type;
 
-            return vars[VariableName];
+            return vars[VariableName].Item1;
         }
     }
 }

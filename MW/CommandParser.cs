@@ -75,6 +75,8 @@ namespace MW
                 workingSetBytes = p.WorkingSet64;
 
             Show.Info($"Memory used (private/working set): {Bytes(privateBytes)}/{Bytes(workingSetBytes)}");
+
+            Show.Info($"Output device: {Playback.GetDeviceFriendlyName()}");
         }
 
         private static string Bytes(long b) =>

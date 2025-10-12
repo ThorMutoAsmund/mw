@@ -32,6 +32,7 @@ namespace MW.Parsing
 
 
         public static List<string> ParseErrors { get; private set; } = new();
+        public static Dictionary<string, object> Settings { get; private set; } = [];
         public static object? ParseResult { get; private set; } = null; 
         public static ParseTree? Tree { get; private set; } = null;
         public static string? Source { get; private set; } = null;
@@ -149,8 +150,9 @@ namespace MW.Parsing
             var thread = new ScriptThread(app);
 
             // optional: pass variables/context to nodes via Globals
+            Settings = new();
             thread.App.Globals["vars"] = new Dictionary<string, (object, AstType)> { };
-            thread.App.Globals["settings"] = new Dictionary<string, object> { };
+            thread.App.Globals["settings"] = Settings;
 
             // Evaluate
             ParseResult = Tree.Root.Evaluate(thread);

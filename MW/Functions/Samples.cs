@@ -16,7 +16,7 @@ namespace MW.Functions
         [Function(name: "s", astType: AstType.Sample, description: "Load sample")]
         public static Sample Sample(MethodContext context)
         {
-            Func.ValidateArgs(nameof(Samples), context, 1);
+            Func.ValidateArgCnt(nameof(Samples), context, numberOfArgs: 1);
 
             var srcName = context.Args[0].EvaluateString(context.Thread) ?? string.Empty;
 

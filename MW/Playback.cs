@@ -1,4 +1,5 @@
 ﻿using MW.Parsing;
+using NAudio.CoreAudioApi;
 using NAudio.Wave;
 
 namespace MW
@@ -9,24 +10,46 @@ namespace MW
         private static WaveStream? fileReader;
         public static WaveOutEvent WaveOut { get; private set; } = new WaveOutEvent();
 
-        //public static bool Toggle(string srcName)
-        //{
-        //    if (WaveOut.PlaybackState == PlaybackState.Stopped)
-        //    {
-        //        PlaySample(srcName);
-        //        return true;
-        //    }
-        //    else
-        //    {
-        //        Stop();
-        //        return false;
-        //    }
-        //}
-
         [Function(isCommandLine: true, name: "stop", description: "Stop playback")]
         public static void Stop()
         {
             EnsureStopped();
+        }
+
+        public static int? JumpTo(int index)
+        {
+            if (!Env.IsProjectLoaded)
+            {
+                EnsureStopped();
+                return null;
+            }
+
+            if (WAParser.Settings.ContainsKey(Constants.JumpPoints))
+            {
+                var setPoints = WAParser.Settings[Constants.JumpPoints] as List<double>;
+                if (setPoints != null && index >= 0 && index < setPoints.Count)
+                {
+                    var setPoint = setPoints[index];
+
+                    EnsureSongGenerated();
+
+                    if (fileReader != null)
+                    {
+                        var t = TimeSpan.FromSeconds(setPoint);
+
+                        if (t < fileReader.TotalTime)
+                        {
+                            WaveOut.Pause();                      // or Stop(); either is fine
+                            fileReader.CurrentTime = t;
+                            WaveOut.Play();
+
+                            return index;
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
 
         public static bool PlaySong()
@@ -37,19 +60,14 @@ namespace MW
                 return false;
             }
 
-            // If a new song has been gnenerated
-            if (Env.Song.Hash != currentSongHash)
+            // Check if new song should be generated
+            var newSongGenerated = EnsureSongGenerated();
+            if (newSongGenerated)
             {
-                EnsureStopped();
-
-                currentSongHash = Env.Song.Hash;
-                fileReader = Env.Song.GetWaveStream();
-
-                WaveOut.Init(fileReader);
-                WaveOut.Play();
                 return true;
             }
 
+            // Toggle old song
             if (WaveOut.PlaybackState == PlaybackState.Stopped)
             {
                 WaveOut.Play();
@@ -112,6 +130,17 @@ namespace MW
             //FileWaveOut.Dispose();
         }
 
+        public static string GetDeviceFriendlyName()
+        {
+            // usage (for a WaveOut/WaveOutEvent you created):
+            int deviceIndex = WaveOut.DeviceNumber;   // -1 means default
+            string name = deviceIndex >= 0
+                ? WinMMHelper.GetWaveOutName(deviceIndex)
+                : new MMDeviceEnumerator().GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia).FriendlyName;
+
+            return name;
+        }
+
         private static void EnsureStopped()
         {
             if (WaveOut.PlaybackState != PlaybackState.Stopped)
@@ -125,6 +154,24 @@ namespace MW
                 //mp3Reader.Dispose();
                 //FileWaveOut.Dispose();
             }
+        }
+
+        private static bool EnsureSongGenerated()
+        {
+            // If a new song has been gnenerated
+            if (Env.Song.Hash != currentSongHash)
+            {
+                EnsureStopped();
+
+                currentSongHash = Env.Song.Hash;
+                fileReader = Env.Song.GetWaveStream();
+
+                WaveOut.Init(fileReader);
+                WaveOut.Play();
+                return true;
+            }
+            
+            return false;
         }
     }
 }

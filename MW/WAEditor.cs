@@ -58,7 +58,7 @@ namespace MW
                 Render();
                 var key = Console.ReadKey(intercept: true);
 
-                if ((key.Modifiers & ConsoleModifiers.Control) != 0)
+                if ((key.Modifiers & ConsoleModifiers.Control) != 0 && (key.Modifiers & ConsoleModifiers.Alt) == 0)
                 {
                     if (key.Key == ConsoleKey.Q)
                     {
@@ -76,6 +76,33 @@ namespace MW
                     {
                         var isPlaying = Playback.PlaySong();
                         ShowInfo(isPlaying ? "Playing..." : "Stopped");
+
+                        continue;
+                    }
+                    else if (key.Key == ConsoleKey.D1 || key.Key == ConsoleKey.D2 || key.Key == ConsoleKey.D3 || key.Key == ConsoleKey.D4 || key.Key == ConsoleKey.D5 ||
+                        key.Key == ConsoleKey.D6 || key.Key == ConsoleKey.D7 || key.Key == ConsoleKey.D8 || key.Key == ConsoleKey.D9 || key.Key == ConsoleKey.D0)
+                    {
+                        int? jumpedTo = null;
+                        switch (key.Key)
+                        {
+                            case ConsoleKey.D1: jumpedTo = Playback.JumpTo(0); break;
+                            case ConsoleKey.D2: jumpedTo = Playback.JumpTo(1); break;
+                            case ConsoleKey.D3: jumpedTo = Playback.JumpTo(2); break;
+                            case ConsoleKey.D4: jumpedTo = Playback.JumpTo(3); break;
+                            case ConsoleKey.D5: jumpedTo = Playback.JumpTo(4); break;
+                            case ConsoleKey.D6: jumpedTo = Playback.JumpTo(5); break;
+                            case ConsoleKey.D7: jumpedTo = Playback.JumpTo(6); break;
+                            case ConsoleKey.D8: jumpedTo = Playback.JumpTo(7); break;
+                            case ConsoleKey.D9: jumpedTo = Playback.JumpTo(8); break;
+                            case ConsoleKey.D0: jumpedTo = Playback.JumpTo(9); break;
+                            default: 
+                                continue;
+                        }
+                        
+                        if (jumpedTo.HasValue)
+                        {
+                            ShowInfo($"Jumping to {jumpedTo.Value}");
+                        }
 
                         continue;
                     }
@@ -414,21 +441,18 @@ namespace MW
                 origBackgroundColor = Console.BackgroundColor;
             }
 
-            // Blue background
-            //var bk_r = "22";
-            //var bk_g = "0";
-            //var bk_b = "100";
-
             // Background
+            var bk_r = "20";
+            var bk_g = "20";
+            var bk_b = "20";
+
+            // Foreground
             var fg_r = "46";
             var fg_g = "149";
             var fg_b = "211";
 
-            //Console.ForegroundColor = ConsoleColor.White;
-            //Console.ForegroundColor = ConsoleColor.White;
             Console.Write($"\u001b[38;2;{fg_r};{fg_g};{fg_b}m");
-            Console.BackgroundColor = ConsoleColor.Black;
-            //Console.Write($"\u001b[48;2;{bk_r};{bk_g};{bk_b}m");
+            Console.Write($"\u001b[48;2;{bk_r};{bk_g};{bk_b}m");
         }
 
         static void ResetColor()

@@ -17,19 +17,36 @@ namespace MW.Functions
         [Function(name: "bpm", description: "Set project BPM")]
         public static void BPM(MethodContext context)
         {
-            Func.ValidateArgs(nameof(BPM), context, 1);
+            Func.ValidateArgCnt(nameof(BPM), context, numberOfArgs:1);
 
             var bpm = context.Args[0].EvaluateDouble(context.Thread);
 
-            Func.ValidateRange(nameof(BPM), bpm, 20, 1000);
+            Func.ValidateRange(nameof(BPM), bpm, min: 20, max:1000);
 
             context.Settings[Constants.BMP] = bpm;
+        }
+
+        [Function(name: "jump", description: "Set jump points")]
+        public static void Jump(MethodContext context)
+        {
+            Func.ValidateArgCnt(nameof(Jump), context, minNumberOfArgs: 1);
+
+            List<double> setPoints = [];
+            for (int i = 0; i < context.Args.Count; ++i)
+            {
+                var setPoint = context.Args[i].EvaluateDouble(context.Thread);
+                Func.ValidateRange(nameof(Jump), setPoint, min: 0);
+
+                setPoints.Add(setPoint);
+            }
+
+            context.Settings[Constants.JumpPoints] = setPoints;
         }
 
         [Function(name: "time", returnsTypedValue: true, description: "Add a duration to a time")]
         public static Tuple<object, AstType> Time(MethodContext context)
         {
-            Func.ValidateArgs(nameof(Time), context, 2);
+            Func.ValidateArgCnt(nameof(Time), context, numberOfArgs: 2);
 
             var time = context.Args[0].EvaluateDouble(context.Thread)
                 + context.Args[1].EvaluateDouble(context.Thread);

@@ -11,34 +11,58 @@ namespace MW.Audio
     {
         public static Song EmptySong = new();
         public List<Sample> Samples { get; private set; } = [];
-        public WaveFormat Format { get; } = new WaveFormat(44100, 16, 2);
+        public WaveFormat Format { get; } = new WaveFormat(44100, 32, 2);
+        public WaveStream? WaveStream { get; private set; }
+        public Sample? Output { get; private set; }
+        public bool IsWaveStreamCreated => this.WaveStream != null;
 
-        private SilenceProvider Silence { get; init; }
+        public Song(Sample output)
+        {
+            this.Output = output;                 
+        }
 
         public Song()
         {
-            this.Silence = new SilenceProvider(Format);
         }
 
         public static Song FromParseResult(object parseResult)
         {
-            return EmptySong;
+            if (!(parseResult is Sample output))
+            {
+                return EmptySong;
+            }
+
+            return new Song(output);
         }
 
         public WaveStream GetWaveStream()
         {
-            return new WaveProviderToWaveStream(Silence);
+            if (this.IsWaveStreamCreated)
+            {
+                return this.WaveStream!;
+            }
+
+            if (this.Output == null)
+            {
+                this.WaveStream = new WaveProviderToWaveStream(new SilenceProvider(Format));
+                
+                return this.WaveStream;
+            }
+
+            this.WaveStream = this.Output.GetWaveStream(this.Format);
+
+            return this.WaveStream;
         }
 
-        public Sample GetOrCreateSample(string src)
+        public Sample GetOrCreateSample(string existingFilePath)
         {
-            var sample = this.Samples.FirstOrDefault(s => s.SrcPath == src);
+            var sample = this.Samples.FirstOrDefault(s => s.FilePath == existingFilePath);
             if (sample != null)
             {
                 return sample;
             }
 
-            sample = new Sample(src);
+            sample = new Sample(existingFilePath);
             this.Samples.Add(sample);
             
             return sample;
