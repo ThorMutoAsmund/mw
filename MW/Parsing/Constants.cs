@@ -14,5 +14,9 @@ namespace MW.Parsing
 
         // Settings
         public static readonly string BMP = "bmp";
+
+        public static string TimeKey = nameof(AstType.Time).ToLowerInvariant();
+        public static string SampleKey = nameof(AstType.Sample).ToLowerInvariant();
+        public static string ContainerKey = nameof(AstType.Container).ToLowerInvariant();
     }
 }

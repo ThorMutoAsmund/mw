@@ -22,6 +22,7 @@ namespace MW
 
             // Center
             WindowHelper.CenterWindow();
+            WindowHelper.SetFont("Consolas", 16);
 
             // Start editor
             WAEditor.Run();

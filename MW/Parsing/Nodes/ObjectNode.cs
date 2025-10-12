@@ -22,7 +22,8 @@ namespace MW.Parsing.Nodes
         {
             foreach (var child in this.ArgsNode.Children)
             {
-                this.Elements[child.Name] = child.Value.Evaluate(thread) ?? 0;
+                var evaluatedChild = child.Evaluate(thread);
+                this.Elements[child.Name] = evaluatedChild ?? 0;
             }
 
             return this.Elements;

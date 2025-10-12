@@ -1,11 +1,27 @@
-// Welcome
-/* hej */
+bpm(120)
+
+$t1: t()
+show($t1)
+
 $s1: s("m1voc.mp3")
-$t1: t($s1)
-$t2: t()
-a($t2, $s1)
-a($t2, $s1)
-show($s1)
+a($t1, {$s1, @1b})
+$b: getoffset($t1, 0)
+
+show($b)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

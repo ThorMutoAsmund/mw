@@ -19,7 +19,7 @@ namespace MW.Parsing.Nodes
         {
             if (Name == Constants.SongVarName)
             {
-                this.Type = AstType.CSObject;
+                this.Type = AstType.Container;
                 return Env.Song;
             }
             var vars = (IDictionary<string, (object, AstType)>)thread.App.Globals["vars"];

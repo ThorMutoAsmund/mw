@@ -33,7 +33,7 @@ namespace MW.Parsing.Nodes
 
         protected override object DoEvaluate(ScriptThread thread)
         {
-            if (this.Op == "pass")
+            if (this.Op == ExprGrammar.PassOperator)
             {
                 var value = this.Left.Evaluate(thread);
                 this.Type = this.Left.Type;

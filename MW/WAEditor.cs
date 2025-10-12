@@ -7,11 +7,13 @@ namespace MW
     {
         public static event Action<List<string>>? Recalc;
 
+        public static bool ChangesMade = false;
         public static List<string> Lines { get; } = new() { "" };
-
+        
         // Colors
         static ConsoleColor? origForegroundColor = null;
         static ConsoleColor? origBackgroundColor = null;
+        static int margin = 5;
 
         // Cursor in buffer (column, row) — NOT screen coordinates
         static int cx = 0;
@@ -104,6 +106,15 @@ namespace MW
             Console.WriteLine();
         }
 
+        private static void RecalcIfChangesMade(List<string> lines)
+        {
+            if (ChangesMade)
+            {
+                Recalc?.Invoke(lines);
+                ChangesMade = false;
+            }
+        }
+
         public static void ShowInfo(object? message = null)
         {
             debugMessage = message?.ToString() ?? string.Empty;
@@ -153,7 +164,7 @@ namespace MW
             { 
                 cy--; 
                 cx = Lines[cy].Length;
-                Recalc?.Invoke(Lines);
+                RecalcIfChangesMade(Lines);
             }
         }
 
@@ -167,7 +178,7 @@ namespace MW
             { 
                 cy++; 
                 cx = 0;
-                Recalc?.Invoke(Lines);
+                RecalcIfChangesMade(Lines);
             }
         }
 
@@ -177,7 +188,7 @@ namespace MW
             { 
                 cy--; 
                 cx = Math.Min(cx, Lines[cy].Length);
-                Recalc?.Invoke(Lines);
+                RecalcIfChangesMade(Lines);
             }
         }
 
@@ -187,7 +198,7 @@ namespace MW
             { 
                 cy++; 
                 cx = Math.Min(cx, Lines[cy].Length);
-                Recalc?.Invoke(Lines);
+                RecalcIfChangesMade(Lines);
             }
         }
 
@@ -198,7 +209,7 @@ namespace MW
                 if (cy != 0)
                 {
                     cy = 0;
-                    Recalc?.Invoke(Lines);
+                    RecalcIfChangesMade(Lines);
                 }
             }
 
@@ -212,7 +223,7 @@ namespace MW
                 if (cy != Lines.Count - 1)
                 {
                     cy = Lines.Count - 1;
-                    Recalc?.Invoke(Lines);
+                    RecalcIfChangesMade(Lines);
                 }
             }
             
@@ -225,7 +236,7 @@ namespace MW
             if (cy != newCy)
             {
                 cy = newCy;
-                Recalc?.Invoke(Lines);
+                RecalcIfChangesMade(Lines);
             }
 
             cx = Math.Min(cx, Lines[cy].Length);
@@ -237,7 +248,7 @@ namespace MW
             if (cy != newCy)
             {
                 cy = newCy;
-                Recalc?.Invoke(Lines);
+                RecalcIfChangesMade(Lines);
             }
 
             cx = Math.Min(cx, Lines[cy].Length);
@@ -249,6 +260,7 @@ namespace MW
             {
                 Lines[cy] = Lines[cy].Remove(cx - 1, 1);
                 cx--;
+                ChangesMade = true;
             }
             else if (cy > 0)
             {
@@ -257,7 +269,8 @@ namespace MW
                 Lines.RemoveAt(cy);
                 cy--; 
                 cx = prevLen;
-                Recalc?.Invoke(Lines);
+                ChangesMade = true;
+                RecalcIfChangesMade(Lines);
             }
         }
 
@@ -266,11 +279,13 @@ namespace MW
             if (cx < Lines[cy].Length)
             {
                 Lines[cy] = Lines[cy].Remove(cx, 1);
+                ChangesMade = true;
             }
             else if (cy < Lines.Count - 1)
             {
                 Lines[cy] = Lines[cy] + Lines[cy + 1];
                 Lines.RemoveAt(cy + 1);
+                ChangesMade = true;
             }
         }
 
@@ -283,12 +298,14 @@ namespace MW
             Lines.Insert(cy + 1, right);
             cy++; 
             cx = 0;
-            Recalc?.Invoke(Lines);
+            ChangesMade = true;
+            RecalcIfChangesMade(Lines);
         }
 
         private static void InsertTab()
         {
             InsertText("    "); // 4-space tabs
+            ChangesMade = true;
         }
 
         private static void InsertChar(char c) => InsertText(c.ToString());
@@ -297,6 +314,7 @@ namespace MW
         {
             Lines[cy] = Lines[cy].Insert(cx, s);
             cx += s.Length;
+            ChangesMade = true;
         }
 
         private static void ClampCursor()
@@ -338,7 +356,7 @@ namespace MW
                 {
                     var line = Lines[bufRow];
                     string slice = Slice(line, left, width);
-                    WritePadded(slice, width);
+                    WritePadded(slice, width, lineNo: bufRow, lineNodPadding: margin - 1);
                 }
                 else
                 {
@@ -358,7 +376,7 @@ namespace MW
             cursorX = Math.Max(0, Math.Min(cursorX, width - 1));
             cursorY = Math.Max(0, Math.Min(cursorY, height - 2));
 
-            Console.SetCursorPosition(cursorX, cursorY);
+            Console.SetCursorPosition(margin+cursorX, cursorY);
             
             if (commandMode)
             {
@@ -397,11 +415,20 @@ namespace MW
             }
 
             // Blue background
-            var r = "22";
-            var g = "0";
-            var b = "100";
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write($"\u001b[48;2;{r};{g};{b}m");
+            //var bk_r = "22";
+            //var bk_g = "0";
+            //var bk_b = "100";
+
+            // Background
+            var fg_r = "46";
+            var fg_g = "149";
+            var fg_b = "211";
+
+            //Console.ForegroundColor = ConsoleColor.White;
+            //Console.ForegroundColor = ConsoleColor.White;
+            Console.Write($"\u001b[38;2;{fg_r};{fg_g};{fg_b}m");
+            Console.BackgroundColor = ConsoleColor.Black;
+            //Console.Write($"\u001b[48;2;{bk_r};{bk_g};{bk_b}m");
         }
 
         static void ResetColor()
@@ -410,9 +437,12 @@ namespace MW
             Console.ForegroundColor = origForegroundColor ?? ConsoleColor.White;
         }
 
-        static void WritePadded(string content, int width, bool invert = false)
+        static void WritePadded(string content, int width, bool invert = false, int? lineNo = null, int lineNodPadding = 0)
         {
-            if (content.Length < width) content = content + new string(' ', width - content.Length);
+            if (content.Length < width)
+            {
+                content = content + new string(' ', width - content.Length);
+            }
 
             if (invert)
             {
@@ -423,6 +453,12 @@ namespace MW
             }
             else
             {
+                if (lineNo.HasValue)
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.Write(lineNo.Value.ToString().PadLeft(lineNodPadding) + " ");
+                    SetColor();
+                }
                 Console.Write(content);
             }
         }

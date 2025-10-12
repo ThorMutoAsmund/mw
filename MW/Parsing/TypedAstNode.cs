@@ -9,7 +9,7 @@ namespace MW.Parsing
 {
     public enum AstType
     {
-        Unset, Number, Text, Object, Time, Duration, CSObject
+        Unset, Number, Text, Object, Time, Duration, Sample, Container
     }
 
     public abstract class TypedAstNode : AstNode

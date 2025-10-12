@@ -13,7 +13,7 @@ namespace MW.Functions
 {
     public static class Samples
     {
-        [Function(name: "s", astType: AstType.CSObject, description: "Load sample")]
+        [Function(name: "s", astType: AstType.Sample, description: "Load sample")]
         public static Sample Sample(MethodContext context)
         {
             Func.ValidateArgs(nameof(Samples), context, 1);

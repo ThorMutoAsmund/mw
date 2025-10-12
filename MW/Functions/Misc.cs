@@ -2,6 +2,7 @@
 using Irony.Interpreter.Ast;
 using Irony.Parsing;
 using MW.Parsing;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -42,7 +43,8 @@ namespace MW.Functions
                             WAEditor.ShowInfo($"\"{value}\"");
                             break;
                         }
-                    case AstType.CSObject:
+                    case AstType.Sample:
+                    case AstType.Container:
                         {
                             var output = value.GetType().Name;
                             var valueString = value.ToString();
@@ -55,7 +57,7 @@ namespace MW.Functions
                         }
                     case AstType.Object:
                         {
-                            WAEditor.ShowInfo(arg.Value.ToString());
+                            WAEditor.ShowInfo(JsonConvert.SerializeObject(value));
                             break;
                         }
                     default:

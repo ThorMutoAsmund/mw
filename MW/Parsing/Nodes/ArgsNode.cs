@@ -1,4 +1,5 @@
 ﻿using Irony.Ast;
+using Irony.Interpreter;
 using Irony.Parsing;
 
 namespace MW.Parsing.Nodes
@@ -15,17 +16,14 @@ namespace MW.Parsing.Nodes
             foreach (var child in node.ChildNodes)
             {
                 var astNode = (AddChild(role: $"Arg{arg++}", child) as ArgNode)!;
-
-                var cnt = 0;
-                while (Children.Any(c => c.Name == astNode!.Name))
-                {
-                    cnt++;
-                    astNode.Name = $"{astNode.OrigName}{cnt}";
-                }
-                astNode.Role = astNode.Name;
-
+                astNode.SetParent(this);
                 Children.Add(astNode);
             }
+        }
+
+        public override string ToString()
+        {
+            return "Args";
         }
     }
 }
