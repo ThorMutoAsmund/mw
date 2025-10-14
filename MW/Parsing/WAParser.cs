@@ -33,7 +33,7 @@ namespace MW.Parsing
 
         public static List<string> ParseErrors { get; private set; } = new();
         public static Dictionary<string, object> Settings { get; private set; } = [];
-        public static object? ParseResult { get; private set; } = null; 
+        public static Sample? Output { get; private set; } = null; 
         public static ParseTree? Tree { get; private set; } = null;
         public static string? Source { get; private set; } = null;
         public WAParser()
@@ -112,7 +112,7 @@ namespace MW.Parsing
         public static void Parse(List<string>? input = null)
         {
             ParseErrors.Clear();    
-            ParseResult = null; 
+            Output = null; 
 
             if (input == null)
             {
@@ -155,8 +155,20 @@ namespace MW.Parsing
             thread.App.Globals["settings"] = Settings;
 
             // Evaluate
-            ParseResult = Tree.Root.Evaluate(thread);
-            Env.Song = ParseResult != null ? Song.FromParseResult(ParseResult) : Song.EmptySong;
+            var parseResult = Tree.Root.Evaluate(thread);
+
+            // If output not set from code, use the result from parsing the lins
+            if (Output == null)
+            {
+                Output = parseResult as Sample;
+            }
+
+            Env.Song = Output != null ? Song.FromSample(Output) : Song.EmptySong;
+        }
+
+        public static void SetOutput(Sample output)
+        {
+            Output = output;
         }
 
         [Function(isCommandLine: true, name: "tree", description: "Shows the last parse tree")]
@@ -218,13 +230,13 @@ namespace MW.Parsing
         [Function(isCommandLine: true, name: "result", alt: "r", description: "Shows the result of last parse")]
         public static void PrintResult()
         {
-            if (ParseResult == null)
+            if (Output == null)
             {
                 Console.WriteLine("null");
                 return;
             }
 
-            Console.WriteLine(ParseResult);
+            Console.WriteLine(Output);
         }
 
         private static void Print(ParseTreeNode node, int indent)

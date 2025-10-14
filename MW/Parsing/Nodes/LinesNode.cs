@@ -2,6 +2,7 @@
 using Irony.Interpreter;
 using Irony.Interpreter.Ast;
 using Irony.Parsing;
+using MW.Audio;
 using System.Reflection;
 using System.Xml.Linq;
 
@@ -24,13 +25,17 @@ namespace MW.Parsing.Nodes
 
         protected override object DoEvaluate(ScriptThread thread)
         {
-            object result = 0;
+            Sample? result = null;
             foreach (var line in lines)
             {
                 try
                 {
-                    result = line.Evaluate(thread);
-                    Type = line.Type;
+                    var lineResult = line.Evaluate(thread);
+                    this.Type = line.Type;
+                    if (this.Type == AstType.Sample)
+                    {
+                        result = lineResult as Sample;
+                    }
                 }
                 catch (RunException ex)
                 {
@@ -38,7 +43,7 @@ namespace MW.Parsing.Nodes
                 }
             }
 
-            return result;
+            return result == null ? 0 : result;
         }
     }
 }

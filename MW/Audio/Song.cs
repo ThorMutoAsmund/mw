@@ -25,14 +25,9 @@ namespace MW.Audio
         {
         }
 
-        public static Song FromParseResult(object parseResult)
+        public static Song FromSample(Sample sample)
         {
-            if (!(parseResult is Sample output))
-            {
-                return EmptySong;
-            }
-
-            return new Song(output);
+            return new Song(sample);
         }
 
         public WaveStream GetWaveStream()

@@ -12,21 +12,22 @@ namespace MW.Parsing.Nodes
         {
             base.Init(ctx, node);
 
-            Name = node.ChildNodes[0].FindTokenAndGetText();
+            this.Name = node.ChildNodes[0].FindTokenAndGetText();
         }
 
         protected override object DoEvaluate(ScriptThread thread)
         {
-            if (Name == Constants.SongVarName)
+            if (this.Name == Constants.SongVarName)
             {
                 this.Type = AstType.Container;
                 return Env.Song;
             }
+
             var vars = (IDictionary<string, (object, AstType)>)thread.App.Globals["vars"];
 
-            if (vars.ContainsKey(Name))
+            if (vars.ContainsKey(this.Name))
             {
-                var value = vars[Name];
+                var value = vars[this.Name];
                 this.Type = value.Item2;
 
                 return value.Item1;
@@ -36,6 +37,6 @@ namespace MW.Parsing.Nodes
             return 0;
         }
 
-        public override string ToString() => Name;
+        public override string ToString() => this.Name;
     }
 }

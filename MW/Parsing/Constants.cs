@@ -9,6 +9,8 @@ namespace MW.Parsing
     public static class Constants
     {
         public static string SongVarName = "song";
+        public static string OutputVarName = "out";
+
         // Default values
         public static double BMPDefault = 120.0;
 

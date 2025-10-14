@@ -1,4 +1,14 @@
 bpm(120)
 $a1: s("m3drums")
+show(29)
+$a2: s("m1voc")
+$a3: s("m2bvoc")
+$out: s("m4bass")
+
+
+
+
+
+
 
 
