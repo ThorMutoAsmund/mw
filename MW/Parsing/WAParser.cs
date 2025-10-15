@@ -16,13 +16,13 @@ namespace MW.Parsing
         public const string ArgSeparator = ",";
         public const string StartObject = "{";
         public const string EndObject = "}";
-        public const string StartFuncArgs = "(";
-        public const string EndFuncArgs = ")";
         public const string ArgIdSuffix = ":";
         public const string BeatSuffix = "b";
         public const string SecondsSuffix = "s";
         public const string TimePrefix = "@";
-        
+        public const string PushOperator = ">";
+        public const string PopOperator = "<";
+
         public const string PlusOperator = "+";
         public const string MinusOperator = "-";
         public const string MultiplicationOperator = "*";
@@ -31,9 +31,12 @@ namespace MW.Parsing
         public const string EndParenthesis = ")";
 
 
-        public static List<string> ParseErrors { get; private set; } = new();
+        public static List<string> ParseErrors { get; private set; } = [];
         public static Dictionary<string, object> Settings { get; private set; } = [];
-        public static Sample? Output { get; private set; } = null; 
+        public static Stack<AudioSource> AudioSourceStack { get; private set; } = new();
+        public static AudioSource? Output { get; private set; } = null;
+        public static AudioSource? CurrentAudioSource { get; private set; } = null;
+        public static AudioSource? Head { get; private set; } = null;
         public static ParseTree? Tree { get; private set; } = null;
         public static string? Source { get; private set; } = null;
         public WAParser()
@@ -63,33 +66,36 @@ namespace MW.Parsing
             NonTerminal<BinaryExprNode> term = new("Term");
             TransientNonTerminal factor = new("Factor");
 
+            NonTerminal<PopNode> pop = new("Pop");
+            NonTerminal<PushNode> push = new("Push");
+
             // EBNF-ish rules
+            line.Rule = assignment | expr | pop | push;
+            assignment.Rule = variable + AssignmentOperator + expr;
+            expr.Rule = func | nexpr | stringTerm | obj;
+            pop.Rule = PopOperator;
+            push.Rule = PushOperator;
             variable.Rule = VariablePrefix + varIdentTerm;
+            func.Rule = funcIdentTerm + StartParenthesis + args + EndParenthesis;
+            nexpr.Rule = nexpr + PlusOperator + term | nexpr + MinusOperator + term | term;
+            stringTerm.AddStartEnd("'", StringOptions.None);
+            obj.Rule = StartObject + args + EndObject;
+            arg.Rule = ArgIdSuffix + argIdentTerm + expr | expr;
+            term.Rule = term + MultiplicationOperator + factor | term + DivisionOperator + factor | factor;
+            factor.Rule = beat | seconds | time | numberTerm | variable | StartParenthesis + nexpr + EndParenthesis;
             beat.Rule = numberTerm + BeatSuffix;
             seconds.Rule = numberTerm + SecondsSuffix;
             time.Rule = TimePrefix + beat | TimePrefix + seconds;
-            line.Rule = assignment | expr;
-            assignment.Rule = variable + AssignmentOperator + expr;
-            func.Rule = funcIdentTerm + StartFuncArgs + args + EndFuncArgs;
-            obj.Rule = StartObject + args + EndObject;
-
-            nexpr.Rule = nexpr + PlusOperator + term | nexpr + MinusOperator + term | term;
-            term.Rule = term + MultiplicationOperator + factor | term + DivisionOperator + factor | factor;
-            factor.Rule = beat | seconds | time | numberTerm | variable | StartParenthesis + nexpr + EndParenthesis;
-
-            expr.Rule = func | nexpr | stringTerm | obj;
-            arg.Rule = ArgIdSuffix + argIdentTerm + expr | expr;
-
-            stringTerm.AddStartEnd("'", StringOptions.None);
 
             MakePlusRule(lines, line);
             MakeStarRule(args, ToTerm(ArgSeparator), arg);
             
             // Punctuation and precedence
-            MarkPunctuation(StartObject, EndObject, StartFuncArgs, EndFuncArgs, ArgSeparator, VariablePrefix, 
+            MarkPunctuation(StartObject, EndObject, StartParenthesis, EndParenthesis, ArgSeparator, VariablePrefix, 
                 AssignmentOperator, BeatSuffix, SecondsSuffix, TimePrefix);
             //RegisterOperators(1, AssignmentOperator);
-            //RegisterOperators(2, MultiplicationOperator, DivisionOperator);
+            //RegisterOperators(3, MultiplicationOperator, DivisionOperator);
+            //RegisterOperators(2, PlusOperator, MinusOperator);
 
             // // line comments (handle \n and \r\n; EOF is handled automatically)
             CommentTerminal lineComment = new("LineComment", "//", "\n", "\r\n");
@@ -112,7 +118,9 @@ namespace MW.Parsing
         public static void Parse(List<string>? input = null)
         {
             ParseErrors.Clear();    
-            Output = null; 
+            Output = null;
+            Head = null;
+            CurrentAudioSource = null;
 
             if (input == null)
             {
@@ -150,25 +158,52 @@ namespace MW.Parsing
             var thread = new ScriptThread(app);
 
             // optional: pass variables/context to nodes via Globals
-            Settings = new();
-            thread.App.Globals["vars"] = new Dictionary<string, (object, AstType)> { };
+            Settings.Clear();
+            AudioSourceStack.Clear();
+            thread.App.Globals["vars"] = new Dictionary<string, (object, AstType)>();
             thread.App.Globals["settings"] = Settings;
 
             // Evaluate
-            var parseResult = Tree.Root.Evaluate(thread);
+            Tree.Root.Evaluate(thread);
 
             // If output not set from code, use the result from parsing the lins
             if (Output == null)
             {
-                Output = parseResult as Sample;
+                Output = CurrentAudioSource;
             }
 
-            Env.Song = Output != null ? Song.FromSample(Output) : Song.EmptySong;
+            Env.Song = Output != null ? Song.FromAudioSource(Output) : Song.EmptySong;
         }
 
-        public static void SetOutput(Sample output)
+        public static void SetOutput(AudioSource output)
         {
             Output = output;
+        }
+
+        public static void SetCurrentAudioSource(AudioSource output)
+        {
+            CurrentAudioSource = output;
+        }
+
+        public static void Push()
+        {
+            if (CurrentAudioSource == null)
+            {
+                throw new RunException("No current audio source to push");
+            }
+            AudioSourceStack.Push(CurrentAudioSource);
+            Head = CurrentAudioSource;
+        }
+
+        public static void Pop()
+        {
+            if (AudioSourceStack.Count == 0)
+            {
+                throw new RunException("Stack underflow");
+            }
+
+            CurrentAudioSource = AudioSourceStack.Pop();
+            Head = AudioSourceStack.Count == 0 ? null : AudioSourceStack.Peek();
         }
 
         [Function(isCommandLine: true, name: "tree", description: "Shows the last parse tree")]

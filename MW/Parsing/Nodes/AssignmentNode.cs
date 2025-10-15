@@ -25,14 +25,14 @@ namespace MW.Parsing.Nodes
 
             if (this.VariableName == Constants.OutputVarName)
             {
-                if (this.Operand.Type != AstType.Sample)
+                if (this.Operand.Type != AstType.Sample && this.Operand.Type != AstType.Container)
                 {
                     throw new RunException($"Cannot set a {this.Operand.Type} as output");
                 }
 
-                if (value is Sample sample)
+                if (value is AudioSource audioSource)
                 {
-                    WAParser.SetOutput(sample);
+                    WAParser.SetOutput(audioSource);
                 }
             }
 

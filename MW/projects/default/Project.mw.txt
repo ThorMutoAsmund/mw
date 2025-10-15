@@ -1,9 +1,57 @@
+
 bpm(120)
-$a1: s("m3drums")
-show(29)
-$a2: s("m1voc")
-$a3: s("m2bvoc")
-$out: s("m4bass")
+t()
+>
+>
+<
+<
+show($head)
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+s("m1voc")
+$a1: s("m1voc")
+$a2: s("m2bvoc")
+$a3: s("m3drums")
+$a4: s("m4bass")
+$a5: s("m5guitar")
+$a6: s("m6keys")
+$a7: s("m7syn")
+$a8: s("m8efx")
+$t1: t()
+a($t1, {$a1, @0s}, {$a1, @1s}, {$a1, @2s}, $a2, $a3, $a4, $a5, $a6, $a7, $a8)
+$out: $t1
+*/
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
 
 
 

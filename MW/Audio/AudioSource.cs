@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NAudio.Wave;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,6 @@ namespace MW.Audio
 {
     public abstract class AudioSource : SongElement
     {
-        public static AudioSource EmptySource = new EmptyAudioSource();
+        public abstract WaveStream GetWaveStream(WaveFormat waveFormat);
     }
 }

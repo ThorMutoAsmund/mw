@@ -2,6 +2,7 @@
 using Irony.Interpreter;
 using Irony.Interpreter.Ast;
 using Irony.Parsing;
+using MW.Audio;
 
 namespace MW.Parsing.Nodes
 {
@@ -21,6 +22,54 @@ namespace MW.Parsing.Nodes
             {
                 this.Type = AstType.Container;
                 return Env.Song;
+            }
+            else if (this.Name == Constants.OutputVarName)
+            {
+                if (WAParser.Output is Sample sample)
+                {
+                    this.Type = AstType.Sample;
+                    return sample;
+                }
+                else if (WAParser.Output is Container container)
+                {
+                    this.Type = AstType.Container;
+                    return container;
+                }
+
+                this.Type = AstType.Unset;
+                return 0;
+            }
+            else if (this.Name == Constants.LastVarName)
+            {
+                if (WAParser.CurrentAudioSource is Sample sample)
+                {
+                    this.Type = AstType.Sample;
+                    return sample;
+                }
+                else if (WAParser.CurrentAudioSource is Container container)
+                {
+                    this.Type = AstType.Container;
+                    return container;
+                }
+
+                this.Type = AstType.Unset;
+                return 0;
+            }
+            else if (this.Name == Constants.HeadVarName)
+            {
+                if (WAParser.Head is Sample sample)
+                {
+                    this.Type = AstType.Sample;
+                    return sample;
+                }
+                else if (WAParser.Head is Container container)
+                {
+                    this.Type = AstType.Container;
+                    return container;
+                }
+
+                this.Type = AstType.Unset;
+                return 0;
             }
 
             var vars = (IDictionary<string, (object, AstType)>)thread.App.Globals["vars"];

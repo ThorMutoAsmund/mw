@@ -11,23 +11,23 @@ namespace MW.Audio
     {
         public static Song EmptySong = new();
         public List<Sample> Samples { get; private set; } = [];
-        public WaveFormat Format { get; } = new WaveFormat(44100, 32, 2);
+        public WaveFormat Format { get; } = WaveFormat.CreateIeeeFloatWaveFormat(44100, 2); //new WaveFormat(44100, 32, 2);
         public WaveStream? WaveStream { get; private set; }
-        public Sample? Output { get; private set; }
+        public AudioSource? AudioSource { get; private set; }
         public bool IsWaveStreamCreated => this.WaveStream != null;
 
-        public Song(Sample output)
+        public Song(AudioSource audioSource)
         {
-            this.Output = output;                 
+            this.AudioSource = audioSource;                 
         }
 
         public Song()
         {
         }
 
-        public static Song FromSample(Sample sample)
+        public static Song FromAudioSource(AudioSource audioSource)
         {
-            return new Song(sample);
+            return new Song(audioSource);
         }
 
         public WaveStream GetWaveStream()
@@ -37,14 +37,14 @@ namespace MW.Audio
                 return this.WaveStream!;
             }
 
-            if (this.Output == null)
+            if (this.AudioSource == null)
             {
                 this.WaveStream = new WaveProviderToWaveStream(new SilenceProvider(Format));
                 
                 return this.WaveStream;
             }
 
-            this.WaveStream = this.Output.GetWaveStream(this.Format);
+            this.WaveStream = this.AudioSource.GetWaveStream(this.Format);
 
             return this.WaveStream;
         }

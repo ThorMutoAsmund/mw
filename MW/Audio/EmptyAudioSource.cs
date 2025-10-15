@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MW.Audio
 {
-    public class EmptyAudioSource : AudioSource
-    {
-    }
+    //public class EmptyAudioSource : AudioSource
+    //{
+    //}
 }

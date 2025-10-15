@@ -25,16 +25,15 @@ namespace MW.Parsing.Nodes
 
         protected override object DoEvaluate(ScriptThread thread)
         {
-            Sample? result = null;
             foreach (var line in lines)
             {
                 try
                 {
                     var lineResult = line.Evaluate(thread);
                     this.Type = line.Type;
-                    if (this.Type == AstType.Sample)
+                    if (lineResult is AudioSource audioSource)
                     {
-                        result = lineResult as Sample;
+                        WAParser.SetCurrentAudioSource(audioSource);
                     }
                 }
                 catch (RunException ex)
@@ -43,7 +42,7 @@ namespace MW.Parsing.Nodes
                 }
             }
 
-            return result == null ? 0 : result;
+            return 0;
         }
     }
 }

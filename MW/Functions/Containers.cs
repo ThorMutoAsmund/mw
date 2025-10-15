@@ -96,27 +96,12 @@ namespace MW.Functions
                         elements[Constants.ContainerKey];
                 }
 
-                switch (source)
+                if (!(source is SongElement songElement))
                 {
-                    case AudioSource audioSource:
-                        {
-                            container.Instances.Add(Instance.CreateFrom(audioSource, offset));
-                            break;
-                        }
-                    case Container childContainer:
-                        {
-                            if (childContainer == container)
-                            {
-                                throw new RunException($"Cannot add a container to itself");
-                            }
-                            container.Instances.Add(Instance.CreateFrom(childContainer, offset));
-                            break;
-                        }
-                    default:
-                        {
-                            throw new RunException($"Arguments must be of type {nameof(AudioSource)} or {nameof(Container)}");
-                        }
+                    throw new RunException($"Cannot add a non-song element");
                 }
+
+                container.Add(songElement, offset);
             }
         }
     }

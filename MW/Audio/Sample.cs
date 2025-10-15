@@ -31,7 +31,7 @@ namespace MW.Audio
         }
 
 
-        public WaveStream GetWaveStream(WaveFormat waveFormat)
+        public override WaveStream GetWaveStream(WaveFormat waveFormat)
         {
             EnsureWaveFileGenerated(waveFormat);
 
@@ -61,19 +61,19 @@ namespace MW.Audio
             }
         }
 
-        private bool CreateWav(string mp3Path, WaveFormat targetFormat,  out string wavPath)
+        private bool CreateWav(string mp3Path, WaveFormat targetFormat,  out string outputWavPath)
         {
-            var fileName = Guid.NewGuid().ToString("N");
+            var outputFileName = Guid.NewGuid().ToString("N");
             var cachePath = Path.Combine(Env.ProjectPath, Env.CacheFolderName);
             
-            wavPath = Path.Combine(cachePath, $"{fileName}.wav");
+            outputWavPath = Path.Combine(cachePath, $"{outputFileName}.wav");
 
             using var source = new AudioFileReader(mp3Path);                // float32
             
             using var resampled = new MediaFoundationResampler(source, targetFormat)
             { ResamplerQuality = 60 };
 
-            WaveFileWriter.CreateWaveFile(wavPath, resampled);              // writes WAV in target format
+            WaveFileWriter.CreateWaveFile(outputWavPath, resampled);              // writes WAV in target format
             return true;
         }
 

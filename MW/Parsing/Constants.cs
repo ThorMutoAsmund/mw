@@ -10,6 +10,8 @@ namespace MW.Parsing
     {
         public static string SongVarName = "song";
         public static string OutputVarName = "out";
+        public static string HeadVarName = "head";
+        public static string LastVarName = "last";
 
         // Default values
         public static double BMPDefault = 120.0;
