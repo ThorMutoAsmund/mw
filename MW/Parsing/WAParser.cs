@@ -29,6 +29,8 @@ namespace MW.Parsing
         public const string DivisionOperator = "/";
         public const string StartParenthesis = "(";
         public const string EndParenthesis = ")";
+        public const string AddOperator = ":";
+        public const string AddAtOperator = "/";
 
 
         public static List<string> ParseErrors { get; private set; } = [];
@@ -68,19 +70,22 @@ namespace MW.Parsing
 
             NonTerminal<PopNode> pop = new("Pop");
             NonTerminal<PushNode> push = new("Push");
+            NonTerminal<AddNode> add = new("Add");
 
             // EBNF-ish rules
-            line.Rule = assignment | expr | pop | push;
+            line.Rule = add | assignment | expr | pop | push;
+            add.Rule = AddOperator + assignment + time | AddOperator + assignment | 
+                AddOperator + expr + time | AddOperator + expr;
             assignment.Rule = variable + AssignmentOperator + expr;
             expr.Rule = func | nexpr | stringTerm | obj;
             pop.Rule = PopOperator;
             push.Rule = PushOperator;
             variable.Rule = VariablePrefix + varIdentTerm;
             func.Rule = funcIdentTerm + StartParenthesis + args + EndParenthesis;
-            nexpr.Rule = nexpr + PlusOperator + term | nexpr + MinusOperator + term | term;
             stringTerm.AddStartEnd("'", StringOptions.None);
             obj.Rule = StartObject + args + EndObject;
             arg.Rule = ArgIdSuffix + argIdentTerm + expr | expr;
+            nexpr.Rule = nexpr + PlusOperator + term | nexpr + MinusOperator + term | term;
             term.Rule = term + MultiplicationOperator + factor | term + DivisionOperator + factor | factor;
             factor.Rule = beat | seconds | time | numberTerm | variable | StartParenthesis + nexpr + EndParenthesis;
             beat.Rule = numberTerm + BeatSuffix;
@@ -92,7 +97,7 @@ namespace MW.Parsing
             
             // Punctuation and precedence
             MarkPunctuation(StartObject, EndObject, StartParenthesis, EndParenthesis, ArgSeparator, VariablePrefix, 
-                AssignmentOperator, BeatSuffix, SecondsSuffix, TimePrefix);
+                AssignmentOperator, BeatSuffix, SecondsSuffix, TimePrefix, AddOperator);
             //RegisterOperators(1, AssignmentOperator);
             //RegisterOperators(3, MultiplicationOperator, DivisionOperator);
             //RegisterOperators(2, PlusOperator, MinusOperator);
@@ -204,6 +209,26 @@ namespace MW.Parsing
 
             CurrentAudioSource = AudioSourceStack.Pop();
             Head = AudioSourceStack.Count == 0 ? null : AudioSourceStack.Peek();
+        }
+
+        public static void Add(object source, double offset)
+        {
+            if (Head == null)
+            {
+                throw new RunException("No head to add to");
+            }
+
+            if (!(source is SongElement songElement))
+            {
+                throw new RunException("Can only add song element");
+            }
+
+            if (!(Head is Container container))
+            {
+                throw new RunException("Can only add to container");
+            }
+
+            container.Add(songElement, offset);
         }
 
         [Function(isCommandLine: true, name: "tree", description: "Shows the last parse tree")]

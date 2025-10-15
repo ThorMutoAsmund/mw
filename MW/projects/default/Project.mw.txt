@@ -1,11 +1,26 @@
+//------------------------
+$title: "The Manager"
+//------------------------
 
 bpm(120)
-t()
->
->
-<
-<
-show($head)
+$OUT: t()>
+//:s("m1voc")@1s
+//:s("m2bvoc")
+:s("m3drums")
+:s("m3drums")@0.01s
+//:s("m4bass")
+//:s("m5guitar")
+//:s("m6keys")
+//:s("m7syn")
+//:s("m8efx")
+show($out)
+
+
+
+
+
+
+
 
 
 

@@ -12,13 +12,13 @@ namespace MW.Parsing.Nodes
         {
             base.Init(ctx, node);
 
-            Child = (AddChild("value", node.ChildNodes[0]) as TypedAstNode)!;
-            Type = AstType.Time;
+            this.Child = (AddChild("value", node.ChildNodes[0]) as TypedAstNode)!;
+            this.Type = AstType.Time;
         }
 
         protected override object DoEvaluate(ScriptThread thread)
         {
-            return Child.EvaluateDouble(thread);
+            return this.Child.EvaluateDouble(thread);
         }
     }
 }

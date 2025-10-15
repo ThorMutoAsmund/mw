@@ -10,8 +10,6 @@ namespace MW.Parsing.Nodes
         public override void Init(AstContext ctx, ParseTreeNode node)
         {
             base.Init(ctx, node);
-
-            var children = node.ChildNodes;
         }
 
         protected override object DoEvaluate(ScriptThread thread)

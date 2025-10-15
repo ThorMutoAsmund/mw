@@ -15,7 +15,7 @@ namespace MW.Audio
         public string WaveFilePath { get; protected set; } = string.Empty;
         public bool IsWaveFileGenerated => !string.IsNullOrEmpty(this.WaveFilePath);
 
-        public void Add(SongElement source, double offset)
+        public void Add(SongElement source, double offset = 0D)
         {
             switch (source)
             {

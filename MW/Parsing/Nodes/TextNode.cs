@@ -11,13 +11,13 @@ namespace MW.Parsing.Nodes
         {
             base.Init(ctx, node);
 
-            Type = AstType.Text;
-            Value = Convert.ToString(node.Token.Value) ?? string.Empty;
+            this.Type = AstType.Text;
+            this.Value = Convert.ToString(node.Token.Value) ?? string.Empty;
         }
 
-        protected override object DoEvaluate(ScriptThread thread) => Value;
+        protected override object DoEvaluate(ScriptThread thread) => this.Value;
 
-        public override string ToString() => Value;
+        public override string ToString() => this.Value;
     }
 }
 

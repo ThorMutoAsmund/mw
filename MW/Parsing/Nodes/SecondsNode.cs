@@ -21,5 +21,7 @@ namespace MW.Parsing.Nodes
         {
             return this.Child.EvaluateDouble(thread);
         }
+        public override string ToString() => nameof(SecondsNode);
+
     }
 }
