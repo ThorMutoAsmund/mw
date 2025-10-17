@@ -13,7 +13,9 @@ namespace MW.Audio
     {
         public List<Instance> Instances { get; private set; } = [];
         public string F32FilePath { get; protected set; } = string.Empty;
-        public bool IsWaveFileGenerated => !string.IsNullOrEmpty(this.F32FilePath);
+        public bool IsF32Generated => !string.IsNullOrEmpty(this.F32FilePath);
+        public bool IsDataReady => this.Data != null;
+        public float[]? Data { get; protected set; } = null;
 
         private string? hashValue;
         public override string HashValue
@@ -30,6 +32,19 @@ namespace MW.Audio
             }
         }
 
+        public override float[] GetData(WaveFormat targetFormat)
+        {
+            EnsureF32Generated(targetFormat);
+
+            if (!IsDataReady)
+            {
+                this.Data = F32Utilities.ReadF32(this.F32FilePath, targetFormat);
+                //return Array.Empty<float>();
+            }
+
+            return this.Data!;
+        }
+
         public void Add(AudioSource audioSource, double offset = 0D)
         {
             if (audioSource == this)
@@ -41,16 +56,16 @@ namespace MW.Audio
 
         public override WaveStream GetWaveStream(WaveFormat waveFormat)
         {
-            EnsureF32FileGenerated(waveFormat);
+            EnsureF32Generated(waveFormat);
 
-            return new RawFloatFileWaveStream(this.F32FilePath, waveFormat);
+            return new F32WaveStream(this.F32FilePath, waveFormat);
         }
 
         public override string ToString() => $"{nameof(Container)} with {this.Instances.Count} element(s)";
 
-        private void EnsureF32FileGenerated(WaveFormat targetFormat)
+        private void EnsureF32Generated(WaveFormat targetFormat)
         {
-            if (!this.IsWaveFileGenerated)
+            if (!this.IsF32Generated)
             {
                 if (CreateF32IfNeeded(targetFormat, out var f32Path))
                 {
@@ -59,34 +74,32 @@ namespace MW.Audio
             }
         }
 
-        private bool CreateF32IfNeeded(WaveFormat targetFormat, out string outputWavPath)
+        private bool CreateF32IfNeeded(WaveFormat targetFormat, out string outputF32Path)
         {
             var outputFileName = this.HashValue;
             var cachePath = Path.Combine(Env.ProjectPath, Env.CacheFolderName);
-            outputWavPath = Path.Combine(cachePath, $"{outputFileName}.f32");
+            outputF32Path = Path.Combine(cachePath, $"{outputFileName}.f32");
 
-            if (!File.Exists(outputWavPath))
+            // Mix instances
+            if (!File.Exists(outputF32Path))
             {
                 FloatBuffer? buffer = null;
 
                 foreach (var instance in this.Instances)
                 {
-                    if (instance.AudioSource is Sample sample)
-                    {
-                        var data = sample.GetData(targetFormat);
-                        var offsetInSamples = (int)(instance.Offset * targetFormat.SampleRate) * 2;
-                        var dataLengthInSamples = data.Length;
+                    var data = instance.AudioSource.GetData(targetFormat);
+                    var offsetInSamples = (int)(instance.Offset * targetFormat.SampleRate) * 2;
+                    var dataLengthInSamples = data.Length;
 
-                        if (buffer is null)
-                        {
-                            buffer = new(offsetInSamples + data.Length);
-                            buffer.AppendZeros(offsetInSamples);
-                            buffer.Append(data);
-                        }
-                        else
-                        {
-                            buffer.Add(offsetInSamples, data);
-                        }
+                    if (buffer is null)
+                    {
+                        buffer = new(offsetInSamples + data.Length);
+                        buffer.AppendZeros(offsetInSamples);
+                        buffer.Append(data);
+                    }
+                    else
+                    {
+                        buffer.Add(offsetInSamples, data);
                     }
                 }
 
@@ -95,7 +108,7 @@ namespace MW.Audio
                     return false;
                 }
 
-                RawFloatFileWaveStream.SaveF32(outputWavPath, buffer, targetFormat);
+                F32Utilities.SaveF32(outputF32Path, buffer, targetFormat);
             }
 
             return true;

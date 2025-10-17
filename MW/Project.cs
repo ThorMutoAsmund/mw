@@ -59,8 +59,6 @@ namespace MW
             }
 
             // Load project file
-            //Project? newProject;
-
             var newProject = File.ReadAllLines(filePath);
 
             if (newProject != null)
