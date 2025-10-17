@@ -74,7 +74,7 @@ namespace MW
                     }
                     else if (key.Key == ConsoleKey.Spacebar)
                     {
-                        var isPlaying = Playback.PlaySong();
+                        var isPlaying = Playback.TogglePlaySong();
                         ShowInfo(isPlaying ? "Playing..." : "Stopped");
 
                         continue;

@@ -96,12 +96,12 @@ namespace MW.Functions
                         elements[Constants.ContainerKey];
                 }
 
-                if (!(source is SongElement songElement))
+                if (!(source is AudioSource audioSource))
                 {
-                    throw new RunException($"Cannot add a non-song element");
+                    throw new RunException($"Cannot add a non-audioSource");
                 }
 
-                container.Add(songElement, offset);
+                container.Add(audioSource, offset);
             }
         }
     }

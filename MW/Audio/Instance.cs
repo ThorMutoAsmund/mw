@@ -9,24 +9,23 @@ namespace MW.Audio
 {
     public class Instance 
     {
-        public Guid Hash { get; protected set; } = Guid.Empty;
-        public SongElement SongElement { get; init; }
+        public AudioSource AudioSource { get; init; }
         public double Offset { get; private set; }
 
-        private Instance(SongElement songElement, double offset)
+        private Instance(AudioSource audioSource, double offset)
         {
-            SongElement = songElement;
+            AudioSource = audioSource;
             Offset = offset;
         }
 
-        public static Instance CreateFrom(SongElement songElement, double offset = 0D)
+        public static Instance CreateFrom(AudioSource audioSource, double offset = 0D)
         {
-            if (songElement is Song)
+            if (audioSource is Song)
             {
                 throw new RunException("Cannot add Song as Instance");
             }
 
-            return new Instance(songElement, offset);
+            return new Instance(audioSource, offset);
         }
 
         public override string ToString() => nameof(Instance);

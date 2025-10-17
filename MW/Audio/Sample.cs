@@ -1,4 +1,5 @@
-﻿using MW.Parsing;
+﻿using MW.Helpers;
+using MW.Parsing;
 using NAudio.Wave;
 using System;
 using System.Buffers;
@@ -13,29 +14,43 @@ namespace MW.Audio
     {
         public string FilePath { get; protected set; } = string.Empty;
         public string FileName { get; protected set; } = string.Empty;
-        public string WaveFilePath { get; protected set; } = string.Empty;
-        public bool IsWaveFileGenerated => !string.IsNullOrEmpty(this.WaveFilePath);
+        public string F32FilePath { get; protected set; } = string.Empty;
+        public bool IsWaveFileGenerated => !string.IsNullOrEmpty(this.F32FilePath);
         public bool IsDataReady => this.Data != null;
 
         public float[]? Data { get; protected set; } = null;
+
+        private const int resamplerQuality = 60;
+
+        private string? hashValue;
+        public override string HashValue
+        {
+            get
+            {
+                if (hashValue is null)
+                {
+                    hashValue = HashingTool.GenerateHash([this.FileName, resamplerQuality, new FileInfo(this.FilePath).Length]);
+                }
+                return hashValue;
+            }
+        }
 
         public Sample(string existingFilePath)
         {
             this.FilePath = existingFilePath;
             this.FileName = Path.GetFileName(existingFilePath);
 
-            if (Project.IsWavFile(this.FilePath))
-            {
-                this.WaveFilePath = this.FilePath;
-            }
+            //if (Project.IsWavFile(this.FilePath))
+            //{
+            //    this.WaveFilePath = this.FilePath;
+            //}
         }
-
 
         public override WaveStream GetWaveStream(WaveFormat waveFormat)
         {
-            EnsureWaveFileGenerated(waveFormat);
+            EnsureF32FileGenerated(waveFormat);
 
-            return new WaveFileReader(this.WaveFilePath);
+            return new RawFloatFileWaveStream(this.F32FilePath, waveFormat);
         }
 
         public float[] GetData(WaveFormat targetFormat)
@@ -50,87 +65,68 @@ namespace MW.Audio
             return this.Data!;
         }
 
-        private void EnsureWaveFileGenerated(WaveFormat targetFormat)
+        private void EnsureF32FileGenerated(WaveFormat targetFormat)
         {
             if (!this.IsWaveFileGenerated)
             {
-                if (CreateWav(this.FilePath, targetFormat, out var wavPath))
+                if (CreateF32IfNeeded(this.FilePath, targetFormat, out var f32Path))
                 {
-                    this.WaveFilePath = wavPath;
+                    this.F32FilePath = f32Path;
                 }
             }
         }
 
-        private bool CreateWav(string mp3Path, WaveFormat targetFormat,  out string outputWavPath)
+        private bool CreateF32IfNeeded(string inputPath, WaveFormat targetFormat, out string outputWavPath)
         {
-            var outputFileName = Guid.NewGuid().ToString("N");
-            var cachePath = Path.Combine(Env.ProjectPath, Env.CacheFolderName);
-            
-            outputWavPath = Path.Combine(cachePath, $"{outputFileName}.wav");
+            var outputFileName = this.HashValue;
+            var cachePath = Path.Combine(Env.ProjectPath, Env.CacheFolderName);            
+            outputWavPath = Path.Combine(cachePath, $"{outputFileName}.f32");
 
-            using var source = new AudioFileReader(mp3Path);                // float32
-            
-            using var resampled = new MediaFoundationResampler(source, targetFormat)
-            { ResamplerQuality = 60 };
+            if (!File.Exists(outputWavPath))
+            {
+                using var source = new AudioFileReader(inputPath);          // decodes to 32-bit float bytes
+                using var resampler = new MediaFoundationResampler(source, targetFormat)
+                { ResamplerQuality = resamplerQuality };
 
-            WaveFileWriter.CreateWaveFile(outputWavPath, resampled);              // writes WAV in target format
+                RawFloatFileWaveStream.SaveF32(outputWavPath, resampler.ToSampleProvider(), targetFormat);
+            }
+
             return true;
         }
 
         private void EnsureDataReady(WaveFormat targetFormat)
         {
-            EnsureWaveFileGenerated(targetFormat);
+            EnsureF32FileGenerated(targetFormat);
 
             if (!IsDataReady)
             {
-                if (LoadAsFloats(this.WaveFilePath, out var data, out var loadedSampleRate, out var loadedChannels, out var loadedBitsPerSample))
-                {
-                    if (targetFormat.SampleRate != loadedSampleRate)
-                    {
-                        throw new RunException($"Sample rate must be {targetFormat.SampleRate}");
-                    }
-
-                    if (targetFormat.Channels != loadedChannels)
-                    {
-                        throw new RunException($"Only {targetFormat.Channels} channel samples currently supported");
-                    }
-
-                    if (targetFormat.BitsPerSample != loadedBitsPerSample)
-                    {
-                        throw new RunException($"Only {targetFormat.BitsPerSample} bits per sample currently supported");
-                    }
-
-                    this.Data = data;
-                }
+                this.Data = RawFloatFileWaveStream.ReadF32(this.F32FilePath, targetFormat);
             }
         }
 
-        private bool LoadAsFloats(string path, out float[] data, out int sampleRate, out int channels, out int bitsPerSample)
-        {
-            using var r = new AudioFileReader(path); // 32-bit float, interleaved
-            sampleRate = r.WaveFormat.SampleRate;
-            channels = r.WaveFormat.Channels;
-            bitsPerSample = r.WaveFormat.BitsPerSample;
+        //private bool LoadAsFloats(string path, out float[] data, WaveFormat targetFormat)
+        //{
+        //    using var r = new RawFloatFileWaveStream(path, targetFormat); // 32-bit float, interleaved
 
-            var list = new List<float>(capacity: (int)(r.Length / 4));
-            var buf = ArrayPool<float>.Shared.Rent(sampleRate * channels); // ~1 sec buffer
-            try
-            {
-                int read;
-                while ((read = r.Read(buf, 0, buf.Length)) > 0)
-                {
-                    list.AddRange(buf.AsSpan(0, read).ToArray());
-                }
-            }
-            finally 
-            { 
-                ArrayPool<float>.Shared.Return(buf); 
-            }
+        //    var list = new List<float>(capacity: (int)(r.Length / 4));
+        //    var buf = ArrayPool<float>.Shared.Rent(targetFormat.SampleRate * targetFormat.Channels); // ~1 sec buffer
+        //    try
+        //    {
+        //        int read;
+        //        while ((read = r.Read(buf, 0, buf.Length)) > 0)
+        //        {
+        //            list.AddRange(buf.AsSpan(0, read).ToArray());
+        //        }
+        //    }
+        //    finally 
+        //    { 
+        //        ArrayPool<float>.Shared.Return(buf); 
+        //    }
 
-            data = list.ToArray(); // interleaved L,R,L,R,...
+        //    data = list.ToArray(); // interleaved L,R,L,R,...
 
-            return true;
-        }
+        //    return true;
+        //}
 
         public override string ToString() => this.FileName;
     }

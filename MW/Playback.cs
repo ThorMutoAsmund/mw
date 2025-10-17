@@ -6,7 +6,7 @@ namespace MW
 {
     public static class Playback
     {
-        private static Guid currentSongHash = Guid.Empty;
+        private static string currentSongHash = string.Empty;
         private static WaveStream? fileReader;
         public static WaveOutEvent WaveOut { get; private set; } = new WaveOutEvent();
 
@@ -52,7 +52,7 @@ namespace MW
             return null;
         }
 
-        public static bool PlaySong()
+        public static bool TogglePlaySong()
         {
             if (!Env.IsProjectLoaded)
             {
@@ -60,16 +60,12 @@ namespace MW
                 return false;
             }
 
-            // Check if new song should be generated
-            var newSongGenerated = EnsureSongGenerated();
-            if (newSongGenerated)
-            {
-                return true;
-            }
-
             // Toggle old song
             if (WaveOut.PlaybackState == PlaybackState.Stopped)
             {
+                // Check if new song should be generated
+                EnsureSongGenerated();
+
                 WaveOut.Play();
                 return true;
             }
@@ -156,22 +152,18 @@ namespace MW
             }
         }
 
-        private static bool EnsureSongGenerated()
+        private static void EnsureSongGenerated()
         {
             // If a new song has been gnenerated
-            if (Env.Song.Hash != currentSongHash)
+            if (Env.Song.HashValue != currentSongHash)
             {
                 EnsureStopped();
 
-                currentSongHash = Env.Song.Hash;
+                currentSongHash = Env.Song.HashValue;
                 fileReader = Env.Song.GetWaveStream();
 
                 WaveOut.Init(fileReader);
-                WaveOut.Play();
-                return true;
             }
-            
-            return false;
         }
     }
 }

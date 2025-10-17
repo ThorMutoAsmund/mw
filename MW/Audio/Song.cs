@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MW.Audio
 {
-    public class Song : Container
+    public class Song : SongElement
     {
         public static Song EmptySong = new();
         public List<Sample> Samples { get; private set; } = [];
@@ -16,6 +16,7 @@ namespace MW.Audio
         public AudioSource? AudioSource { get; private set; }
         public bool IsWaveStreamCreated => this.WaveStream != null;
 
+        public override string HashValue => this.AudioSource?.HashValue ?? Guid.Empty.ToString();
         public Song(AudioSource audioSource)
         {
             this.AudioSource = audioSource;                 
@@ -49,7 +50,7 @@ namespace MW.Audio
             return this.WaveStream;
         }
 
-        public Sample GetOrCreateSample(string existingFilePath)
+        public Sample FindSample(string existingFilePath)
         {
             var sample = this.Samples.FirstOrDefault(s => s.FilePath == existingFilePath);
             if (sample != null)

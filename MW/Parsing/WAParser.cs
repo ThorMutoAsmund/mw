@@ -31,6 +31,8 @@ namespace MW.Parsing
         public const string EndParenthesis = ")";
         public const string AddOperator = ":";
         public const string AddAtOperator = "/";
+        public const string StringStartOperator = "\"";
+        public const string StringAltStartEndOperator = "'";
 
 
         public static List<string> ParseErrors { get; private set; } = [];
@@ -81,8 +83,8 @@ namespace MW.Parsing
             pop.Rule = PopOperator;
             push.Rule = PushOperator;
             variable.Rule = VariablePrefix + varIdentTerm;
-            func.Rule = funcIdentTerm + StartParenthesis + args + EndParenthesis;
-            stringTerm.AddStartEnd("'", StringOptions.None);
+            func.Rule = funcIdentTerm + StartParenthesis + args + EndParenthesis | funcIdentTerm + args;
+            stringTerm.AddStartEnd(StringAltStartEndOperator, StringOptions.None);
             obj.Rule = StartObject + args + EndObject;
             arg.Rule = ArgIdSuffix + argIdentTerm + expr | expr;
             nexpr.Rule = nexpr + PlusOperator + term | nexpr + MinusOperator + term | term;
@@ -218,9 +220,9 @@ namespace MW.Parsing
                 throw new RunException("No head to add to");
             }
 
-            if (!(source is SongElement songElement))
+            if (!(source is AudioSource audioSource))
             {
-                throw new RunException("Can only add song element");
+                throw new RunException("Can only add audioSource");
             }
 
             if (!(Head is Container container))
@@ -228,7 +230,7 @@ namespace MW.Parsing
                 throw new RunException("Can only add to container");
             }
 
-            container.Add(songElement, offset);
+            container.Add(audioSource, offset);
         }
 
         [Function(isCommandLine: true, name: "tree", description: "Shows the last parse tree")]

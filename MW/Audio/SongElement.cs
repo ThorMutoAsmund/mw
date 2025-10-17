@@ -8,6 +8,6 @@ namespace MW.Audio
 {
     public abstract class SongElement
     {
-        public Guid Hash { get; protected set; } = Guid.NewGuid();
+        public abstract string HashValue { get; }
     }
 }

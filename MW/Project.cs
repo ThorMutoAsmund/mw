@@ -71,6 +71,9 @@ namespace MW
                 Env.AreChangesMade = false;
 
                 var fullPath = Path.GetFullPath(filePath);
+
+                ClearCache();
+
                 Show.Hint($"Loaded project file: {fullPath}");
 
                 return true;

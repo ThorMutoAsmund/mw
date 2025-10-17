@@ -25,7 +25,7 @@ namespace MW.Functions
                 throw new RunException(message);
             }
 
-            return Env.Song.GetOrCreateSample(filePath);
+            return Env.Song.FindSample(filePath);
         }
     }
 }
