@@ -204,7 +204,33 @@ namespace MW
             }
         }
 
-        public static bool SrcExists(string srcName, out string message, out string filePath)
+        public static bool SrcExists(string partialSrcName, out string message, out string filePath)
+        {
+            filePath = string.Empty;
+            var downloadFolder = Path.Combine(Env.ProjectPath, Env.DownloadFolderName);
+
+            var files = Directory.GetFiles(downloadFolder);
+            var fileName = files.FirstOrDefault(f => Path.GetFileName(f).StartsWith(partialSrcName));
+
+            if (fileName is null)
+            {
+                message = $"No file matches '{partialSrcName}'";
+                return false;
+            }
+
+            filePath = fileName;
+
+            if (!Project.IsAudioFile(filePath))
+            {
+                message = $"'{Path.GetFileName(fileName)}' not a supported audio file";
+                return false;
+            }
+
+            message = string.Empty;
+            return true;
+        }
+
+        public static bool SrcExistsExact(string srcName, out string message, out string filePath)
         {
             var downloadFolder = Path.Combine(Env.ProjectPath, Env.DownloadFolderName);
             filePath = Path.Combine(downloadFolder, srcName);
@@ -241,15 +267,16 @@ namespace MW
 
             return SupportedFormats.Contains(ext.Substring(1));
         }
-        public static bool IsWavFile(string fileNameOrPath)
-        {
-            var ext = Path.GetExtension(fileNameOrPath).ToLowerInvariant();
-            if (string.IsNullOrEmpty(ext))
-            {
-                return false;
-            }
 
-            return ext == ".wav";
-        }
+        //public static bool IsWavFile(string fileNameOrPath)
+        //{
+        //    var ext = Path.GetExtension(fileNameOrPath).ToLowerInvariant();
+        //    if (string.IsNullOrEmpty(ext))
+        //    {
+        //        return false;
+        //    }
+
+        //    return ext == ".wav";
+        //}
     }
 }
