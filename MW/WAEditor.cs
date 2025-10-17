@@ -1,4 +1,6 @@
-﻿using MW.Parsing;
+﻿using MW.Helpers;
+using MW.Parsing;
+using System.Globalization;
 using System.Text;
 
 namespace MW
@@ -60,51 +62,88 @@ namespace MW
 
                 if ((key.Modifiers & ConsoleModifiers.Control) != 0 && (key.Modifiers & ConsoleModifiers.Alt) == 0)
                 {
-                    if (key.Key == ConsoleKey.Q)
+                    bool stop = false;
+                    switch (key.Key)
                     {
-                        if (Show.OkToDiscardChanges())
-                        {
-                            Console.SetCursorPosition(0, Math.Min(Console.WindowHeight - 1, Console.WindowHeight - 1));
-                            break;
-                        }
+                        case ConsoleKey.Q:
+                            {
+                                if (Show.OkToDiscardChanges())
+                                {
+                                    Console.SetCursorPosition(0, Math.Min(Console.WindowHeight - 1, Console.WindowHeight - 1));
+                                    stop = true;
+                                    break;
+                                }
 
-                        SetColor();
-                        Render(commandMode: true);
-                        continue;
-                    }
-                    else if (key.Key == ConsoleKey.Spacebar)
-                    {
-                        var isPlaying = Playback.TogglePlaySong();
-                        ShowInfo(isPlaying ? "Playing..." : "Stopped");
-
-                        continue;
-                    }
-                    else if (key.Key == ConsoleKey.D1 || key.Key == ConsoleKey.D2 || key.Key == ConsoleKey.D3 || key.Key == ConsoleKey.D4 || key.Key == ConsoleKey.D5 ||
-                        key.Key == ConsoleKey.D6 || key.Key == ConsoleKey.D7 || key.Key == ConsoleKey.D8 || key.Key == ConsoleKey.D9 || key.Key == ConsoleKey.D0)
-                    {
-                        int? jumpedTo = null;
-                        switch (key.Key)
-                        {
-                            case ConsoleKey.D1: jumpedTo = Playback.JumpTo(0); break;
-                            case ConsoleKey.D2: jumpedTo = Playback.JumpTo(1); break;
-                            case ConsoleKey.D3: jumpedTo = Playback.JumpTo(2); break;
-                            case ConsoleKey.D4: jumpedTo = Playback.JumpTo(3); break;
-                            case ConsoleKey.D5: jumpedTo = Playback.JumpTo(4); break;
-                            case ConsoleKey.D6: jumpedTo = Playback.JumpTo(5); break;
-                            case ConsoleKey.D7: jumpedTo = Playback.JumpTo(6); break;
-                            case ConsoleKey.D8: jumpedTo = Playback.JumpTo(7); break;
-                            case ConsoleKey.D9: jumpedTo = Playback.JumpTo(8); break;
-                            case ConsoleKey.D0: jumpedTo = Playback.JumpTo(9); break;
-                            default: 
+                                SetColor();
+                                Render(commandMode: true);
                                 continue;
-                        }
-                        
-                        if (jumpedTo.HasValue)
-                        {
-                            ShowInfo($"Jumping to {jumpedTo.Value}");
-                        }
+                            }
+                        case ConsoleKey.Spacebar:
+                            {
+                                var isPlaying = Playback.TogglePlaySong();
+                                ShowInfo(isPlaying ? "Playing..." : "Stopped");
 
-                        continue;
+                                continue;
+                            }
+                        case ConsoleKey.D1:
+                        case ConsoleKey.D2:
+                        case ConsoleKey.D3:
+                        case ConsoleKey.D4:
+                        case ConsoleKey.D5:
+                        case ConsoleKey.D6:
+                        case ConsoleKey.D7:
+                        case ConsoleKey.D8:
+                        case ConsoleKey.D9:
+                        case ConsoleKey.D0:
+                            {
+                                double? jumpedTo = null;
+                                switch (key.Key)
+                                {
+                                    case ConsoleKey.D1: jumpedTo = Playback.JumpTo(0); break;
+                                    case ConsoleKey.D2: jumpedTo = Playback.JumpTo(1); break;
+                                    case ConsoleKey.D3: jumpedTo = Playback.JumpTo(2); break;
+                                    case ConsoleKey.D4: jumpedTo = Playback.JumpTo(3); break;
+                                    case ConsoleKey.D5: jumpedTo = Playback.JumpTo(4); break;
+                                    case ConsoleKey.D6: jumpedTo = Playback.JumpTo(5); break;
+                                    case ConsoleKey.D7: jumpedTo = Playback.JumpTo(6); break;
+                                    case ConsoleKey.D8: jumpedTo = Playback.JumpTo(7); break;
+                                    case ConsoleKey.D9: jumpedTo = Playback.JumpTo(8); break;
+                                    case ConsoleKey.D0: jumpedTo = Playback.JumpTo(9); break;
+                                    default:
+                                        continue;
+                                }
+
+                                if (jumpedTo.HasValue)
+                                {
+                                    ShowInfo($"Jumping to {jumpedTo.Value.FromSeconds()}s");
+                                }
+
+                                continue;
+                            }
+                        case ConsoleKey.RightArrow:
+                            {
+                                var useSmall = (key.Modifiers & ConsoleModifiers.Shift) != 0;
+                                var jumpedTo = useSmall ? Playback.SeekFine(1D) : Playback.Seek(1D);
+                                if (jumpedTo.HasValue)
+                                {
+                                    ShowInfo($"Jumping to {jumpedTo.Value.FromSeconds()}s");
+                                }
+                                continue;
+                            }
+                        case ConsoleKey.LeftArrow:
+                            {
+                                var useSmall = (key.Modifiers & ConsoleModifiers.Shift) != 0;
+                                var jumpedTo = useSmall ? Playback.SeekFine(-1D) : Playback.Seek(-1D);
+                                if (jumpedTo.HasValue)
+                                {
+                                    ShowInfo($"Jumping to {jumpedTo.Value.FromSeconds()}s");
+                                }
+                                continue;
+                            }
+                    }
+                    if (stop)
+                    {
+                        break;
                     }
                 }
 
@@ -124,7 +163,7 @@ namespace MW
 
                 HandleKey(key);
                 ClampCursor();
-                EnsureCursorVisible();
+                EnsureCursorVisible();            
             }
 
             // Leave the screen in a tidy state

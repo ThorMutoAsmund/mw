@@ -1,4 +1,4 @@
-    //------------------------
+//------------------------
 $title: "The Manager"
 //------------------------
 
@@ -6,21 +6,20 @@ $title: "The Manager"
 
 
 
-
-
+seek(2)
 bpm(120)
 $OUT: t()>
 //:s("m1voc")@1s
 //:s("m2bvoc")
-:s"m1"
-:s"m1"@0.02s
-:s"m1"@0.01s
+:s"m4"
 //:s("m4bass")
 //:s("m5guitar")
 //:s("m6keys")
 //:s("m7syn")
 //:s("m8efx")
 show($out)
+
+
 
 
 

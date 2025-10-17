@@ -19,6 +19,9 @@ namespace MW.Parsing
         // Settings
         public static readonly string BMP = "bmp";
         public static readonly string JumpPoints = "jump";
+        public static readonly string SeekTime = "seektime";
+        public static readonly string FineSeekTime = "smallseektime";
+
 
         public static string TimeKey = nameof(AstType.Time).ToLowerInvariant();
         public static string SampleKey = nameof(AstType.Sample).ToLowerInvariant();

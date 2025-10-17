@@ -26,6 +26,23 @@ namespace MW.Functions
             context.Settings[Constants.BMP] = bpm;
         }
 
+        [Function(name: "seek", description: "Set seek time(s) in seconds")]
+        public static void Seek(MethodContext context)
+        {
+            Func.ValidateArgCnt(nameof(Seek), context, minNumberOfArgs: 1);
+
+            var seekTime = context.Args[0].EvaluateDouble(context.Thread);
+            Func.ValidateRange(nameof(Seek), seekTime, min: 0, max: 120);
+            context.Settings[Constants.SeekTime] = seekTime;
+
+            if (context.Args.Count > 1)
+            {
+                var smallSeekTime = context.Args[1].EvaluateDouble(context.Thread);
+                Func.ValidateRange(nameof(Seek), smallSeekTime, min: 0, max: 120);
+                context.Settings[Constants.FineSeekTime] = smallSeekTime;
+            }
+        }
+
         [Function(name: "jump", description: "Set jump points")]
         public static void Jump(MethodContext context)
         {

@@ -12,6 +12,8 @@ namespace MW
     {
         public static bool IsDebug = true;
         public static bool ShowHints = true;
+        public static double DefaultSeekTIme = 5D;
+        public static double DefaultFineSeekTime = 1D;
 
         public static string ApplicationName = $"ModWaves";
         public static string ApplicationNameAndVersion = $"{ApplicationName} {Assembly.GetExecutingAssembly().GetName().Version} (c) Thor Muto Asmund";
