@@ -37,8 +37,9 @@ namespace MW.Parsing.Nodes
             var function = functions.FirstOrDefault(m => m.Attr.Name == FunctionName);
             if (function == default)
             {
-                this.Type = AstType.Unset;
-                return 0;
+                throw new RunException($"Function {FunctionName} not found");
+                //this.Type = AstType.Unset;
+                //return 0;
             }
 
             // Return the result of the method call, and 0 if it's null

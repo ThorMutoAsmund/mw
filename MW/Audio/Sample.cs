@@ -20,75 +20,84 @@ namespace MW.Audio
         public float[]? Data { get; protected set; } = null;
 
         private const int resamplerQuality = 60;
-
-        private string? hashValue;
-        public override string HashValue
-        {
-            get
-            {
-                if (hashValue is null)
-                {
-                    hashValue = HashingTool.GenerateHash([this.FileName, resamplerQuality, new FileInfo(this.FilePath).Length]);
-                }
-                return hashValue;
-            }
-        }
-
+        public override string HashValue { get; }
+        private string toStringValue;
+        private bool isGeneratedSample;
         public Sample(string existingFilePath)
         {
             this.FilePath = existingFilePath;
+            this.HashValue = HashingTool.GenerateHash([this.FileName, resamplerQuality, new FileInfo(this.FilePath).Length]);
+            this.toStringValue = this.FileName;
         }
 
-        public override float[] GetData(WaveFormat targetFormat)
+        public Sample(float[] data, string hashValue)
         {
-            EnsureF32Generated(targetFormat);
+            this.isGeneratedSample = true;
+            this.Data = data;
+            this.HashValue = hashValue;
+            this.toStringValue = hashValue;
+        }
+
+        public override float[] GetData()
+        {
+            EnsureF32Generated();
 
             if (!IsDataReady)
             {
-                this.Data = F32Utilities.ReadF32(this.F32FilePath, targetFormat);
-                //return Array.Empty<float>();
+                this.Data = F32Utilities.ReadF32(this.F32FilePath, Env.Song.Format);
             }
 
             return this.Data!;
         }
 
-        public override WaveStream GetWaveStream(WaveFormat waveFormat)
+        public override WaveStream GetWaveStream()
         {
-            EnsureF32Generated(waveFormat);
+            EnsureF32Generated();
 
-            return new F32WaveStream(this.F32FilePath, waveFormat);
+            return new F32WaveStream(this.F32FilePath, Env.Song.Format);
         }
 
-        private void EnsureF32Generated(WaveFormat targetFormat)
+        private void EnsureF32Generated()
         {
             if (!this.IsF32Generated)
             {
-                if (CreateF32IfNeeded(this.FilePath, targetFormat, out var f32Path))
+                if (CreateF32IfNeeded(this.FilePath, out var f32Path))
                 {
                     this.F32FilePath = f32Path;
                 }
             }
         }
 
-        private bool CreateF32IfNeeded(string inputPath, WaveFormat targetFormat, out string outputF32Path)
+        private bool CreateF32IfNeeded(string inputPath, out string outputF32Path)
         {
-            var outputFileName = this.HashValue;
             var cachePath = Path.Combine(Env.ProjectPath, Env.CacheFolderName);            
-            outputF32Path = Path.Combine(cachePath, $"{outputFileName}.f32");
+            outputF32Path = Path.Combine(cachePath, $"{this.HashValue}.f32");
 
             if (!File.Exists(outputF32Path))
             {
-                using var source = new AudioFileReader(inputPath);          // decodes to 32-bit float bytes
-                using var resampler = new MediaFoundationResampler(source, targetFormat)
-                { ResamplerQuality = resamplerQuality };
+                if (this.isGeneratedSample)
+                {
+                    if (!this.IsDataReady)
+                    {
+                        throw new RunException("Cannot save generated sample if no data");
+                    }
 
-                F32Utilities.SaveF32(outputF32Path, resampler.ToSampleProvider(), targetFormat);
+                    F32Utilities.SaveF32(outputF32Path, FloatBuffer.Wrap(this.Data!), Env.Song.Format);
+                }
+                else
+                {
+                    using var source = new AudioFileReader(inputPath);          // decodes to 32-bit float bytes
+                    using var resampler = new MediaFoundationResampler(source, Env.Song.Format)
+                    { ResamplerQuality = resamplerQuality };
+
+                    F32Utilities.SaveF32(outputF32Path, resampler.ToSampleProvider(), Env.Song.Format);
+                }
             }
 
             return true;
         }
 
 
-        public override string ToString() => this.FileName;
+        public override string ToString() => this.toStringValue;
     }
 }

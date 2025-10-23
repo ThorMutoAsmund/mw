@@ -20,11 +20,6 @@ namespace MW.Audio
 
         public static Instance CreateFrom(AudioSource audioSource, double offset = 0D)
         {
-            if (audioSource is Song)
-            {
-                throw new RunException("Cannot add Song as Instance");
-            }
-
             return new Instance(audioSource, offset);
         }
 

@@ -9,7 +9,7 @@ namespace MW.Audio
 {
     public abstract class AudioSource : SongElement
     {
-        public abstract float[] GetData(WaveFormat targetFormat);
-        public abstract WaveStream GetWaveStream(WaveFormat waveFormat);
+        public abstract float[] GetData();
+        public abstract WaveStream GetWaveStream();
     }
 }

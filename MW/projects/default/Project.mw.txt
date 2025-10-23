@@ -3,15 +3,19 @@ $title: "The Manager"
 //------------------------
 
 
+$s1: s"m3"
+$a: cut($s1, @0s, 2s)
 
 
-
-seek(2)
+seek(2, 0.2)
 bpm(120)
 $OUT: t()>
 //:s("m1voc")@1s
 //:s("m2bvoc")
-:s"m4"
+$smp1: s"m3"
+: cut($smp1, @1s, 1s)
+: cut($smp1, @1s, 1s)@0.5s
+
 //:s("m4bass")
 //:s("m5guitar")
 //:s("m6keys")

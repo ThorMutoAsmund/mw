@@ -9,6 +9,7 @@ namespace MW.Audio
 {
     public class Song : SongElement
     {
+        public WaveProviderToWaveStream Silence { get; init; }
         public static Song EmptySong = new();
         public List<Sample> Samples { get; private set; } = [];
         public WaveFormat Format { get; } = WaveFormat.CreateIeeeFloatWaveFormat(44100, 2); //new WaveFormat(44100, 32, 2);
@@ -17,13 +18,15 @@ namespace MW.Audio
         public bool IsWaveStreamCreated => this.WaveStream != null;
 
         public override string HashValue => this.AudioSource?.HashValue ?? Guid.Empty.ToString();
-        public Song(AudioSource audioSource)
+        public Song(AudioSource audioSource): 
+            this()
         {
             this.AudioSource = audioSource;                 
         }
 
         public Song()
         {
+            this.Silence = new WaveProviderToWaveStream(new SilenceProvider(this.Format));
         }
 
         public static Song FromAudioSource(AudioSource audioSource)
@@ -40,12 +43,12 @@ namespace MW.Audio
 
             if (this.AudioSource == null)
             {
-                this.WaveStream = new WaveProviderToWaveStream(new SilenceProvider(Format));
+                this.WaveStream = this.Silence;
                 
                 return this.WaveStream;
             }
 
-            this.WaveStream = this.AudioSource.GetWaveStream(this.Format);
+            this.WaveStream = this.AudioSource.GetWaveStream();
 
             return this.WaveStream;
         }

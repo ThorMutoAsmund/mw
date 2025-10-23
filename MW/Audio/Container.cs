@@ -32,13 +32,13 @@ namespace MW.Audio
             }
         }
 
-        public override float[] GetData(WaveFormat targetFormat)
+        public override float[] GetData()
         {
-            EnsureF32Generated(targetFormat);
+            EnsureF32Generated();
 
             if (!IsDataReady)
             {
-                this.Data = F32Utilities.ReadF32(this.F32FilePath, targetFormat);
+                this.Data = F32Utilities.ReadF32(this.F32FilePath, Env.Song.Format);
                 //return Array.Empty<float>();
             }
 
@@ -54,27 +54,29 @@ namespace MW.Audio
             this.Instances.Add(Instance.CreateFrom(audioSource, offset));
         }
 
-        public override WaveStream GetWaveStream(WaveFormat waveFormat)
+        public override WaveStream GetWaveStream()
         {
-            EnsureF32Generated(waveFormat);
+            EnsureF32Generated();
 
-            return new F32WaveStream(this.F32FilePath, waveFormat);
+            return this.IsF32Generated ? 
+                new F32WaveStream(this.F32FilePath, Env.Song.Format) :
+                Env.Song.Silence;
         }
 
         public override string ToString() => $"{nameof(Container)} with {this.Instances.Count} element(s)";
 
-        private void EnsureF32Generated(WaveFormat targetFormat)
+        private void EnsureF32Generated()
         {
             if (!this.IsF32Generated)
             {
-                if (CreateF32IfNeeded(targetFormat, out var f32Path))
+                if (CreateF32IfNeeded(out var f32Path))
                 {
                     this.F32FilePath = f32Path;
                 }
             }
         }
 
-        private bool CreateF32IfNeeded(WaveFormat targetFormat, out string outputF32Path)
+        private bool CreateF32IfNeeded(out string outputF32Path)
         {
             var outputFileName = this.HashValue;
             var cachePath = Path.Combine(Env.ProjectPath, Env.CacheFolderName);
@@ -87,8 +89,8 @@ namespace MW.Audio
 
                 foreach (var instance in this.Instances)
                 {
-                    var data = instance.AudioSource.GetData(targetFormat);
-                    var offsetInSamples = (int)(instance.Offset * targetFormat.SampleRate) * 2;
+                    var data = instance.AudioSource.GetData();
+                    var offsetInSamples = (int)(instance.Offset * Env.Song.Format.SampleRate) * 2;
                     var dataLengthInSamples = data.Length;
 
                     if (buffer is null)
@@ -108,7 +110,7 @@ namespace MW.Audio
                     return false;
                 }
 
-                F32Utilities.SaveF32(outputF32Path, buffer, targetFormat);
+                F32Utilities.SaveF32(outputF32Path, buffer, Env.Song.Format);
             }
 
             return true;
