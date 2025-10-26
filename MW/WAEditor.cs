@@ -25,11 +25,18 @@ namespace MW
         static int top = 0;
         static int left = 0;
 
+        // Copy and undo
+        static string? copyBuffer = null;
+        static Stack<(string[], int, int, int, int)> redoBuffer = [];
+        static Stack<(string[],int,int,int,int)> undoBuffer = [];
+
         // Debug
         static string debugMessage = string.Empty;
 
         public static void Run()
         {
+            ShowIsPlaying(false);
+
             Console.OutputEncoding = Encoding.UTF8;
             Console.TreatControlCAsInput = true;
             Console.CursorVisible = true;
@@ -65,6 +72,33 @@ namespace MW
                     bool stop = false;
                     switch (key.Key)
                     {
+                        case ConsoleKey.Z:
+                            {
+                                if ((key.Modifiers & ConsoleModifiers.Shift) == 0)
+                                {
+                                    Undo();
+                                }
+                                else
+                                {
+                                    Redo();
+                                }
+                                continue;
+                            }
+                        case ConsoleKey.D:
+                            {
+                                DeleteCurrentLine();
+                                continue;
+                            }
+                        case ConsoleKey.C:
+                            {
+                                Copy();
+                                continue;
+                            }
+                        case ConsoleKey.V:
+                            {
+                                Paste();
+                                continue;
+                            }
                         case ConsoleKey.Q:
                             {
                                 if (Show.OkToDiscardChanges())
@@ -81,7 +115,7 @@ namespace MW
                         case ConsoleKey.Spacebar:
                             {
                                 var isPlaying = Playback.TogglePlaySong();
-                                ShowInfo(isPlaying ? "Playing..." : "Stopped");
+                                ShowIsPlaying(isPlaying);
 
                                 continue;
                             }
@@ -172,11 +206,11 @@ namespace MW
             Console.WriteLine();
         }
 
-        private static void RecalcIfChangesMade(List<string> lines)
+        private static void RecalcIfChangesMade()
         {
             if (ChangesMade)
             {
-                Recalc?.Invoke(lines);
+                Recalc?.Invoke(Lines);
                 ChangesMade = false;
             }
         }
@@ -186,10 +220,17 @@ namespace MW
             debugMessage = message?.ToString() ?? string.Empty;
         }
 
+        public static void ShowIsPlaying(bool isPlaying)
+        {
+            Console.Title = $"{Env.ApplicationName} {(isPlaying ? "(Playing...)" : "(Stopped)")}";
+        }
+
         public static void LoadText(string[] text)
         {
             Lines.Clear();
-            Lines.AddRange(text);
+            Lines.AddRange(text.Length == 0 ? [""] : text);
+            redoBuffer.Clear();
+            undoBuffer.Clear();
         }
 
         private static void HandleKey(ConsoleKeyInfo k)
@@ -206,7 +247,7 @@ namespace MW
                 case ConsoleKey.PageDown: PageDown(); break;
                 case ConsoleKey.Backspace: Backspace(); break;
                 case ConsoleKey.Delete: Delete(); break;
-                case ConsoleKey.Enter: InsertNewLine(); break;
+                case ConsoleKey.Enter: Insert(); break;
                 case ConsoleKey.Tab: InsertTab(); break;
 
                 default:
@@ -230,7 +271,7 @@ namespace MW
             { 
                 cy--; 
                 cx = Lines[cy].Length;
-                RecalcIfChangesMade(Lines);
+                RecalcIfChangesMade();
             }
         }
 
@@ -244,7 +285,7 @@ namespace MW
             { 
                 cy++; 
                 cx = 0;
-                RecalcIfChangesMade(Lines);
+                RecalcIfChangesMade();
             }
         }
 
@@ -254,7 +295,7 @@ namespace MW
             { 
                 cy--; 
                 cx = Math.Min(cx, Lines[cy].Length);
-                RecalcIfChangesMade(Lines);
+                RecalcIfChangesMade();
             }
         }
 
@@ -264,7 +305,7 @@ namespace MW
             { 
                 cy++; 
                 cx = Math.Min(cx, Lines[cy].Length);
-                RecalcIfChangesMade(Lines);
+                RecalcIfChangesMade();
             }
         }
 
@@ -275,7 +316,7 @@ namespace MW
                 if (cy != 0)
                 {
                     cy = 0;
-                    RecalcIfChangesMade(Lines);
+                    RecalcIfChangesMade();
                 }
             }
 
@@ -289,7 +330,7 @@ namespace MW
                 if (cy != Lines.Count - 1)
                 {
                     cy = Lines.Count - 1;
-                    RecalcIfChangesMade(Lines);
+                    RecalcIfChangesMade();
                 }
             }
             
@@ -302,7 +343,7 @@ namespace MW
             if (cy != newCy)
             {
                 cy = newCy;
-                RecalcIfChangesMade(Lines);
+                RecalcIfChangesMade();
             }
 
             cx = Math.Min(cx, Lines[cy].Length);
@@ -314,7 +355,7 @@ namespace MW
             if (cy != newCy)
             {
                 cy = newCy;
-                RecalcIfChangesMade(Lines);
+                RecalcIfChangesMade();
             }
 
             cx = Math.Min(cx, Lines[cy].Length);
@@ -324,19 +365,21 @@ namespace MW
         {
             if (cx > 0)
             {
+                StoreUndoBeforeChange();
                 Lines[cy] = Lines[cy].Remove(cx - 1, 1);
                 cx--;
                 ChangesMade = true;
             }
             else if (cy > 0)
             {
+                StoreUndoBeforeChange();
                 int prevLen = Lines[cy - 1].Length;
                 Lines[cy - 1] = Lines[cy - 1] + Lines[cy];
                 Lines.RemoveAt(cy);
                 cy--; 
                 cx = prevLen;
                 ChangesMade = true;
-                RecalcIfChangesMade(Lines);
+                RecalcIfChangesMade();
             }
         }
 
@@ -344,40 +387,48 @@ namespace MW
         {
             if (cx < Lines[cy].Length)
             {
+                StoreUndoBeforeChange();
                 Lines[cy] = Lines[cy].Remove(cx, 1);
                 ChangesMade = true;
             }
             else if (cy < Lines.Count - 1)
             {
+                StoreUndoBeforeChange();
                 Lines[cy] = Lines[cy] + Lines[cy + 1];
                 Lines.RemoveAt(cy + 1);
                 ChangesMade = true;
+                RecalcIfChangesMade();
             }
         }
 
-        private static void InsertNewLine()
+        private static void Insert(string text = "")
         {
-            string line = Lines[cy];
-            string left = line.Substring(0, cx);
-            string right = line.Substring(cx);
-            Lines[cy] = left;
+            StoreUndoBeforeChange();
+            string left = Lines[cy].Substring(0, cx);
+            string right = Lines[cy].Substring(cx);
+            Lines[cy] = left + text;
             Lines.Insert(cy + 1, right);
             cy++; 
             cx = 0;
             ChangesMade = true;
-            RecalcIfChangesMade(Lines);
+            RecalcIfChangesMade();
         }
 
         private static void InsertTab()
         {
+            StoreUndoBeforeChange();
             InsertText("    "); // 4-space tabs
             ChangesMade = true;
         }
 
-        private static void InsertChar(char c) => InsertText(c.ToString());
+        private static void InsertChar(char c)
+        {
+            InsertText(c.ToString());
+        }
 
         private static void InsertText(string s)
         {
+            StoreUndoBeforeChange();
             Lines[cy] = Lines[cy].Insert(cx, s);
             cx += s.Length;
             ChangesMade = true;
@@ -519,11 +570,88 @@ namespace MW
                 if (lineNo.HasValue)
                 {
                     Console.ForegroundColor = ConsoleColor.DarkGray;
-                    Console.Write(lineNo.Value.ToString().PadLeft(lineNodPadding) + " ");
+                    Console.Write((lineNo+1).Value.ToString().PadLeft(lineNodPadding) + " ");
                     SetColor();
                 }
                 Console.Write(content);
             }
+        }
+
+        static void DeleteCurrentLine()
+        {
+            if (cy < Lines.Count)
+            {
+                if (Lines.Count > 1)
+                {
+                    StoreUndoBeforeChange();
+                    Lines.RemoveAt(cy);
+                    if (cy >= Lines.Count)
+                    {
+                        cy--;
+                    }
+                    ChangesMade = true;
+                    RecalcIfChangesMade();
+                }
+                else if (!String.IsNullOrEmpty(Lines[0]))
+                {
+                    StoreUndoBeforeChange();
+                    Lines[0] = string.Empty;
+                    ChangesMade = true;
+                    RecalcIfChangesMade();
+                }
+            }
+        }
+
+        static void Copy()
+        {
+            copyBuffer = Lines[cy];
+        }
+
+        static void Paste()
+        {
+            if (copyBuffer != null)
+            {
+                Insert(copyBuffer);
+            }
+        }
+
+        static void StoreUndoBeforeChange()
+        {
+            redoBuffer.Clear();
+            undoBuffer.Push((Lines.ToArray(), cx, cy, top, left));
+        }
+
+        static void Undo()
+        {
+            if (undoBuffer.Count > 0)
+            {
+                redoBuffer.Push((Lines.ToArray(), cx, cy, top, left));
+                Restore(undoBuffer.Pop());
+                Render();
+                RecalcIfChangesMade();
+            }
+        }
+
+        static void Redo()
+        {
+            if (redoBuffer.Count > 0)
+            {
+                undoBuffer.Push((Lines.ToArray(), cx, cy, top, left));
+                Restore(redoBuffer.Pop());
+                Render();
+                RecalcIfChangesMade();
+            }
+        }
+
+        static void Restore((string[], int, int, int, int) values)
+        {
+            Lines.Clear();
+            Lines.AddRange(values.Item1);
+            cx = values.Item2;
+            cy = values.Item3;
+            top = values.Item4;
+            left = values.Item5;
+            ChangesMade = true;
         }
 
         static bool RunCommandMode()

@@ -15,10 +15,23 @@ namespace MW
         private static double FineSeekTime;
         private static List<double> JumpPoints = [];
 
+        static Playback()
+        {
+            WaveOut.PlaybackStopped += OnPlaybackStopped;
+        }
+
+        private static void OnPlaybackStopped(object? sender, StoppedEventArgs e)
+        {
+            WAEditor.ShowIsPlaying(false);
+            //if (e.Exception != null)
+            //    Console.Error.WriteLine($"Playback error: {e.Exception}");
+            //else
+            //    Console.WriteLine("Playback finished.");
+        }
 
         [Function(isCommandLine: true, name: "stop", description: "Stop playback")]
         public static void Stop()
-        {
+        {            
             EnsureStopped();
         }
 
@@ -71,6 +84,7 @@ namespace MW
             {
                 // Check if new song should be generated
                 EnsureSongGenerated();
+                UpdateCurrentTime(setTo: TimeSpan.Zero);
 
                 WaveOut.Play();
                 return true;

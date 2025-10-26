@@ -20,10 +20,25 @@ namespace MW.Parsing.Nodes
 
         protected override object DoEvaluate(ScriptThread thread)
         {
+            var idx = 0;
             foreach (var child in this.ArgsNode.Children)
             {
-                var evaluatedChild = child.Evaluate(thread);
-                this.Elements[child.Name] = evaluatedChild ?? 0;
+                var evaluatedChild = child.Evaluate(thread) ?? 0;
+                var name = child.Name;
+                if (string.IsNullOrEmpty(name))
+                {
+                    name = $"{idx++}";
+                }
+
+                var cnt = 0;
+                var origName = name;
+                while (this.Elements.Any(c => c.Key == name))
+                {
+                    cnt++;
+                    name = $"{origName}{cnt}";
+                }
+
+                this.Elements[name] = evaluatedChild;
             }
 
             return this.Elements;

@@ -35,7 +35,7 @@ namespace MW.Parsing.Nodes
             {
                 // Infer name from the type
                 this.Value = (AddChild(role: "Value", node.ChildNodes[0]) as TypedAstNode)!;
-                this.setNameInEvaluate = true;
+                //this.setNameInEvaluate = true;
             }
             else
             {
@@ -54,22 +54,6 @@ namespace MW.Parsing.Nodes
             // Return the result of the method call, and 0 if it's null
             var value = Value.Evaluate(thread) ?? 0;
             this.Type = Value.Type;
-            if (this.setNameInEvaluate)
-            {
-                this.Name = Value.Type.ToString().ToLowerInvariant();
-            }
-            var origName = this.Name;
-
-            // Fix name if other args have same name
-            if (this.parentNode != null)
-            {
-                var cnt = 0;
-                while (this.parentNode.Children.Any(c => c != this && c.Name == this.Name))
-                {
-                    cnt++;
-                    this.Name = $"{origName}{cnt}";
-                }                
-            }
 
             return value;
         }

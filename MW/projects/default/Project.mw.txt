@@ -1,48 +1,7 @@
-//------------------------
-$title: "The Manager"
-//------------------------
+// Title="Music"
 
-
-$s1: s"m3"
-$a: cut($s1, @0s, 2s)
-
-
-seek(2, 0.2)
-bpm(120)
-$OUT: t()>
-//:s("m1voc")@1s
-//:s("m2bvoc")
-$smp1: s"m3"
-: cut($smp1, @1s, 1s)
-: cut($smp1, @1s, 1s)@0.5s
-
-//:s("m4bass")
-//:s("m5guitar")
-//:s("m6keys")
-//:s("m7syn")
-//:s("m8efx")
-show($out)
-
-
-
-
-
-    
-
-/*
-s("m1voc")
-$a1: s("m1voc")
-$a2: s("m2bvoc")
-$a3: s("m3drums")
-$a4: s("m4bass")
-$a5: s("m5guitar")
-$a6: s("m6keys")
-$a7: s("m7syn")
-$a8: s("m8efx")
-$t1: t()
-a($t1, {$a1, @0s}, {$a1, @1s}, {$a1, @2s}, $a2, $a3, $a4, $a5, $a6, $a7, $a8)
-$out: $t1
-*/
+$a: [:a 1,2,3]
+show($a)
 
 
 
@@ -52,21 +11,10 @@ $out: $t1
 
 
 
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
+//bpm(200)
+//$OUT: t()>
+//+ $m3: s("m3")@0s
+//+ $m3@1s
 
 
 

@@ -14,8 +14,8 @@ namespace MW.Parsing
         public const string VariablePrefix = "$";
         public const string AssignmentOperator = ":";
         public const string ArgSeparator = ",";
-        public const string StartObject = "{";
-        public const string EndObject = "}";
+        public const string StartObject = "[";
+        public const string EndObject = "]";
         public const string ArgIdSuffix = ":";
         public const string BeatSuffix = "b";
         public const string SecondsSuffix = "s";
@@ -29,8 +29,7 @@ namespace MW.Parsing
         public const string DivisionOperator = "/";
         public const string StartParenthesis = "(";
         public const string EndParenthesis = ")";
-        public const string AddOperator = ":";
-        public const string AddAtOperator = "/";
+        public const string AddOperator = "+";
         public const string StringStartOperator = "\"";
         public const string StringAltStartEndOperator = "'";
 
